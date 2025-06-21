@@ -47,7 +47,8 @@ class WelcomeActivity : ComponentActivity() {
     }
 
     private fun goToLogin() {
-        startActivity(Intent(this, LoginActivity::class.java))
+        startActivity(Intent(this, MainActivity::class.java))
+        //startActivity(Intent(this, LoginActivity::class.java))
         finish()
     }
 

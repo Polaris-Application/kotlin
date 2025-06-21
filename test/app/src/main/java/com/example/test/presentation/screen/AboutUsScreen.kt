@@ -36,7 +36,6 @@ import androidx.compose.ui.unit.sp
 
 
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AboutUsScreen(
@@ -49,11 +48,19 @@ fun AboutUsScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        "درباره ما",
+                    Box(
                         modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center
-                    )
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "درباره ما",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 20.sp
+                            ),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 },
                 navigationIcon = {
                     IconButton(onClick = {
@@ -64,7 +71,7 @@ fun AboutUsScreen(
                         }
                     }) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            imageVector =Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "بازگشت",
                             tint = MaterialTheme.colorScheme.primary
                         )
@@ -73,12 +80,13 @@ fun AboutUsScreen(
             )
         }
     ) { padding ->
+
         LazyColumn(
             contentPadding = padding,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
                 Card(
@@ -169,6 +177,35 @@ fun AboutUsScreen(
                         Text(
                             text = "آشنایی با شبکه‌های تلفن همراه",
                             style = MaterialTheme.typography.bodyLarge,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            }
+
+            item {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(4.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = "مخزن رسمی",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
+                        Text(
+                            text = "https://github.com/Polaris-Application/",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.secondary,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth()
                         )

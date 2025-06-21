@@ -13,6 +13,8 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.test.data.local.entity.*
+import com.example.test.data.remote.MobileDataApi
+import com.example.test.data.remote.dto.TestResultRequest
 import com.example.test.domain.usecase.AddTestResultUseCase
 import com.example.test.domain.usecase.GetAllTestsUseCase
 import com.example.test.domain.usecase.GetResultsByTestIdUseCase
@@ -23,6 +25,9 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
+import com.example.test.data.remote.TestResultApi
+import com.example.test.utility.TestUploader
+
 
 @AndroidEntryPoint
 class TestSchedulerService : Service() {
@@ -31,8 +36,8 @@ class TestSchedulerService : Service() {
     @Inject lateinit var addTestResultUseCase: AddTestResultUseCase
     @Inject lateinit var networkTestUseCases: NetworkTestUseCases
     @Inject lateinit var getResultsByTestIdUseCase: GetResultsByTestIdUseCase // تزریق GetResultsByTestIdUseCase
-
-
+    @Inject lateinit var testResultApi: TestResultApi
+    @Inject lateinit var uploader: TestUploader
     private val serviceScope = CoroutineScope(Dispatchers.IO)
     private val jobs = mutableMapOf<Long, Job>()
     private var lastSmsSentTime: Long = 0L // زمان آخرین ارسال پیامک
@@ -114,7 +119,6 @@ class TestSchedulerService : Service() {
             "sms" -> {
                 val smsResult = runSmsTest(applicationContext, param ?: "", testId)
                 Log.d("SmsTest", "SMS delivered at: $smsResult")
-                // ذخیره نتیجه SMS در دیتابیس
                 val timestamp = System.currentTimeMillis()
 
                 val smsTestEntity = SMSTestEntity(
@@ -124,11 +128,12 @@ class TestSchedulerService : Service() {
                     SMSTime = smsResult.deliveryTime - smsResult.sentTime,
                     deliveryTime = smsResult.deliveryTime
                 )
-
-                // ذخیره نتیجه تست SMS در دیتابیس
                 addTestResultUseCase(smsTestEntity)
-                return@runTestOnce // برمی‌گردیم چون SMS به صورت جداگانه ذخیره می‌شود
+                uploader.uploadResult("sms", param, (smsResult.deliveryTime - smsResult.sentTime).toDouble())
+                return@runTestOnce
+
             }
+
             else -> "-1"
         }
 
@@ -138,21 +143,41 @@ class TestSchedulerService : Service() {
 
             // ذخیره‌سازی نتیجه براساس نوع تست
             when (type) {
-                "ping" -> addTestResultUseCase(
-                    PingTestEntity(testId = testId, timestamp = timestamp, pingTime = resultValue.toLong())
-                )
-                "dns" -> addTestResultUseCase(
-                    DNSTestEntity(testId = testId, timestamp = timestamp, dnsTime = resultValue.toLong())
-                )
-                "web" -> addTestResultUseCase(
-                    WebTestEntity(testId = testId, timestamp = timestamp, webResponseTime = resultValue.toLong())
-                )
-                "upload" -> addTestResultUseCase(
-                    HttpUploadTestEntity(testId = testId, timestamp = timestamp, uploadRate = resultValue.toDouble())
-                )
-                "download" -> addTestResultUseCase(
-                    HttpDownloadTestEntity(testId = testId, timestamp = timestamp, downloadRate = resultValue.toDouble())
-                )
+                "ping" -> {
+                    val value = resultValue.toLong()
+                    addTestResultUseCase(
+                        PingTestEntity(testId = testId, timestamp = timestamp, pingTime = value)
+                    )
+                    uploader.uploadResult("ping", param, value.toDouble())
+                }
+                "dns" -> {
+                    val value = resultValue.toLong()
+                    addTestResultUseCase(
+                        DNSTestEntity(testId = testId, timestamp = timestamp, dnsTime = value)
+                    )
+                    uploader.uploadResult("dns", param, value.toDouble())
+                }
+                "web" -> {
+                    val value = resultValue.toLong()
+                    addTestResultUseCase(
+                        WebTestEntity(testId = testId, timestamp = timestamp, webResponseTime = value)
+                    )
+                    uploader.uploadResult("web", param, value.toDouble())
+                }
+                "upload" -> {
+                    val value = resultValue.toDouble()
+                    addTestResultUseCase(
+                        HttpUploadTestEntity(testId = testId, timestamp = timestamp, uploadRate = value)
+                    )
+                    uploader.uploadResult("upload", null, value)
+                }
+                "download" -> {
+                    val value = resultValue.toDouble()
+                    addTestResultUseCase(
+                        HttpDownloadTestEntity(testId = testId, timestamp = timestamp, downloadRate = value)
+                    )
+                    uploader.uploadResult("download", null, value)
+                }
                 "sms" -> {
                     // نتیجه SMS در اینجا ذخیره نمی‌شود چون در runSmsTest ذخیره می‌شود
                 }
@@ -225,6 +250,36 @@ class TestSchedulerService : Service() {
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
+
+
+//    private suspend fun sendTestResultToServer(type: String, param: String?, result: Double) {
+//        try {
+//            val token = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+//                .getString("access_token", null) ?: return
+//
+//            val timestamp = java.text.SimpleDateFormat(
+//                "yyyy-MM-dd'T'HH:mm:ss",
+//                java.util.Locale.getDefault()
+//            ).format(java.util.Date())
+//
+//            val request = TestResultRequest(
+//                name = type,
+//                timestamp = timestamp,
+//                test_domain = param,
+//                result = result
+//            )
+//
+//            val response = testResultApi.sendTestResult("Bearer $token", request)
+//            if (response.isSuccessful) {
+//                Log.d("TestService", "✅ نتیجه $type ارسال شد به سرور.")
+//            } else {
+//                Log.e("TestService", "❌ ارسال ناموفق: ${response.code()}")
+//            }
+//
+//        } catch (e: Exception) {
+//            Log.e("TestService", "❌ خطا در ارسال به سرور: ${e.message}")
+//        }
+//    }
 
 
 

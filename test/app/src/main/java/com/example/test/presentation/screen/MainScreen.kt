@@ -121,16 +121,16 @@ fun MainScreen(
             }
 
             Text(
-                text = "سیم‌کارت انتخاب‌شده: $selectedSim",
+                text = "$selectedSim: سیم کارت انتخاب شده",
                 modifier = Modifier.fillMaxWidth(),
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center
             )
-
-            Button(onClick = onClearSim) {
-                Text("♻️ بازنشانی سیم‌کارت")
-            }
-
+//
+//            Button(onClick = onClearSim) {
+//                Text("♻️ بازنشانی سیم‌کارت")
+//            }
+//
 
         }
     }
