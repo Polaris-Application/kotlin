@@ -167,9 +167,8 @@ fun SMSTestScreen(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Column(modifier = Modifier.weight(1f)) {
-                                        Text("Type: ${test.type}")
-                                        Text("Param: ${test.param}")
-                                        Text("Repeat Interval: ${test.repeatInterval}")
+                                        Text("${test.param}")
+                                        Text("${test.repeatInterval}")
                                     }
                                     IconButton(onClick = {
                                         if (test.isPaused) viewModel.resumeTest(test.id)

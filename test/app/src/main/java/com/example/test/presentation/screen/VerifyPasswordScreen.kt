@@ -61,12 +61,24 @@ fun VerifyPasswordScreen(
         Button(onClick = {
             val valid = viewModel.verifyPassword(context, password)
             if (valid) {
-                onVerified()
+                viewModel.reLoginWithProvidedPassword(
+                    context = context,
+                    password = password,
+                    onSuccess = {
+                        Toast.makeText(context, "توکن‌ها به‌روز شدند!", Toast.LENGTH_SHORT).show()
+                        onVerified()
+                    },
+                    onError = { errorMessage ->
+                        error = "خطا در به‌روزرسانی توکن: $errorMessage"
+                        Toast.makeText(context, "خطا: $errorMessage", Toast.LENGTH_LONG).show()
+                    }
+                )
             } else {
                 error = "رمز عبور اشتباه است"
             }
         }, modifier = Modifier.fillMaxWidth()) {
-            Text("ادامه ▶️")
+            Text("ادامه ")
         }
+
     }
 }

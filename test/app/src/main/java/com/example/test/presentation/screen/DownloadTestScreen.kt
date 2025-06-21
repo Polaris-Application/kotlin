@@ -147,8 +147,8 @@ fun DownloadTestScreen(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Column(modifier = Modifier.weight(1f)) {
-                                        Text("Type: ${test.type}")
-                                        Text("Repeat Interval: ${test.repeatInterval}")
+                                        Text("${test.param}")
+                                        Text("${test.repeatInterval}")
                                     }
                                     IconButton(onClick = {
                                         if (test.isPaused) viewModel.resumeTest(test.id)

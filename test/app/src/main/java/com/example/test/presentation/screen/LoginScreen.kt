@@ -4,23 +4,45 @@ import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.test.presentation.viewmodel.LoginViewModel
 import com.example.test.MainActivity
 
 @Composable
-fun LoginScreen(viewModel: LoginViewModel) {
+fun LoginScreen(
+    viewModel: LoginViewModel,
+    onNavigateToSignUp: () -> Unit,
+    onLoginSuccess: () -> Unit
+) {
     val context = LocalContext.current
     var phoneNumber by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var showPassword by remember { mutableStateOf(false) }
     var phoneError by remember { mutableStateOf<String?>(null) }
     var passwordError by remember { mutableStateOf<String?>(null) }
+
+    val loginState = viewModel.loginState
+    LaunchedEffect(loginState) {
+        loginState?.let { result ->
+            result.onSuccess {
+                Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+                onLoginSuccess()
+            }.onFailure {
+                Toast.makeText(context, it.message, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -29,12 +51,12 @@ fun LoginScreen(viewModel: LoginViewModel) {
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "شماره و رمز عبوری که با اون در سایت ما ثبت‌نام کردی (یا می‌خوای بکنی) رو در فیلدهای زیر وارد کن",
+            text = "برای ورود لطفاً شماره موبایل و رمز عبوری که با آن ها در سایت ثبت‌نام کردی را وارد کن",
             textAlign = androidx.compose.ui.text.style.TextAlign.Right,
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedTextField(
             value = phoneNumber,
@@ -43,17 +65,11 @@ fun LoginScreen(viewModel: LoginViewModel) {
                 phoneError = viewModel.getPhoneValidationError(it)
             },
             label = { Text("شماره موبایل") },
-            keyboardOptions = KeyboardOptions.Default.copy(
-                keyboardType = KeyboardType.Phone
-            ),
+            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Phone),
             isError = phoneError != null,
             modifier = Modifier.fillMaxWidth()
         )
-
-        phoneError?.let {
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(it, color = MaterialTheme.colorScheme.error)
-        }
+        phoneError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -64,29 +80,20 @@ fun LoginScreen(viewModel: LoginViewModel) {
                 passwordError = viewModel.getPasswordValidationError(it)
             },
             label = { Text("رمز عبور") },
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions.Default.copy(
-                keyboardType = KeyboardType.Password
-            ),
+            visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
+            trailingIcon = {
+                IconButton(onClick = { showPassword = !showPassword }) {
+                    Icon(
+                        imageVector = if (showPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                        contentDescription = null
+                    )
+                }
+            },
+            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Password),
             isError = passwordError != null,
             modifier = Modifier.fillMaxWidth()
         )
-
-        passwordError?.let {
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(it, color = MaterialTheme.colorScheme.error)
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // هشدار ⚠️
-        Text(
-            " برای دیدن نتایج باید با همین شماره و رمز عبور توی سایت لاگین کنی",
-            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold),
-            color = MaterialTheme.colorScheme.primary,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Right,
-            modifier = Modifier.fillMaxWidth()
-        )
+        passwordError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -96,14 +103,18 @@ fun LoginScreen(viewModel: LoginViewModel) {
                 val passValid = viewModel.getPasswordValidationError(password) == null
 
                 if (phoneValid && passValid) {
-                    viewModel.saveLoginData(context, phoneNumber, password)
-                    context.startActivity(Intent(context, MainActivity::class.java))
-                    (context as? android.app.Activity)?.finish()
+                    viewModel.loginUser(context, phoneNumber, password)
                 }
             },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("ورود ▶️")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        TextButton(onClick = onNavigateToSignUp, modifier = Modifier.align(Alignment.End)) {
+            Text("اکانت نداری؟ ثبت‌نام کن")
         }
     }
 }

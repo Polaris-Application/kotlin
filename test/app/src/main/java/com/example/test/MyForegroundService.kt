@@ -11,12 +11,20 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import javax.inject.Inject
 import com.example.test.boot.*
+import com.example.test.data.remote.MobileDataApi
+import com.example.test.data.remote.dto.MobileDataRequest
+import android.content.Context
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @AndroidEntryPoint
 class MyForegroundService : Service() {
 
     @Inject
     lateinit var insertCellInfoUseCase: InsertCellInfoUseCase
+    @Inject
+    lateinit var mobileDataApi: MobileDataApi
 
     private lateinit var wakeLock: PowerManager.WakeLock
     private val handler = Handler(Looper.getMainLooper())
@@ -27,6 +35,45 @@ class MyForegroundService : Service() {
                 try {
                     val entity = CellInfoCollector.collect(applicationContext)
                     insertCellInfoUseCase(entity)
+                    val sharedPrefs = applicationContext.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+                    val accessToken = sharedPrefs.getString("access_token", null)
+
+                    if (accessToken != null) {
+                        val formatted = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+                        val timestampStr = formatted.format(Date(entity.timestamp))
+
+                        val request = MobileDataRequest(
+                            network_type = entity.networkType ?: "Unknown",
+                            timestamp = timestampStr,
+                            latitude = entity.latitude,
+                            longitude = entity.longitude,
+                            plmn_id = entity.plmnId?.toIntOrNull(),
+                            lac = entity.lac,
+                            rac = entity.rac,
+                            tac = entity.tac,
+                            cell_id = entity.cellId,
+                            band = entity.band?.toString(),
+                            arfcn = entity.arfcn,
+                            rsrp = entity.rsrp,
+                            rsrq = entity.rsrq,
+                            rssi = entity.rssi?.toDouble(),
+                            rscp = entity.rscp,
+                            ec_no = entity.ecNo,
+                            rx_lev = entity.rxLev
+                        )
+
+                        try {
+                            val response = mobileDataApi.sendMobileData("Bearer $accessToken", request)
+                            if (response.isSuccessful) {
+                                Log.d("CELL_SERVICE", "✅ Data sent to server successfully.")
+                            } else {
+                                Log.e("CELL_SERVICE", "❌ Failed to send data: ${response.code()}")
+                            }
+                        } catch (e: Exception) {
+                            Log.e("CELL_SERVICE", "❌ Exception while sending data: ${e.message}", e)
+                        }
+                    }
+
                     Log.d("CELL_SERVICE", "✅ Data collected and saved.")
                 } catch (e: Exception) {
                     Log.e("CELL_SERVICE", "❌ Error collecting/saving data: ${e.message}", e)

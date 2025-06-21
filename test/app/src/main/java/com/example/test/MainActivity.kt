@@ -14,13 +14,14 @@ import androidx.navigation.compose.rememberNavController
 import com.example.test.ui.theme.TestTheme
 import com.example.test.presentation.viewmodel.MainViewModel
 import com.example.test.navigation.AppNavGraph
+import com.example.test.presentation.viewmodel.LoginViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     private val viewModel: MainViewModel by viewModels()
-
+    private val loginViewModel: LoginViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         handleBatteryOptimization()
@@ -33,6 +34,7 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 AppNavGraph(
                     navController = navController,
+                    viewModel = loginViewModel,
                     selectedSim = viewModel.selectedSim.value,
                     onSimSelected = { viewModel.selectSim(it) },
                     onClearSim = { viewModel.clearSim() },

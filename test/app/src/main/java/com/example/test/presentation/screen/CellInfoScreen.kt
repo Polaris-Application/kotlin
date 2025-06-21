@@ -148,9 +148,11 @@ fun CellInfoScreen(
                             InfoRow("🌐", "نوع شبکه", cell.networkType.toString())
                             InfoRow("📱", "PLMN", cell.plmnId.toString())
                             InfoRow("🔄", "LAC/RAC/TAC", "${cell.lac}/${cell.rac}/${cell.tac}")
-                            InfoRow("📡", "Cell", cell.cellId.toString())
-                            InfoRow("📶", "Band", "${cell.band}/${cell.arfcn}")
-
+//                            InfoRow("📡", "Cell", cell.cellId.toString())
+//                            InfoRow("📶", "Band", "${cell.band}/${cell.arfcn}")
+                            InfoRow("📡", "Cell ID", cell.cellId.toString())
+                            InfoRow("📶", "Band", "${cell.band}")
+                            InfoRow("📳", "ARFCN", "${cell.arfcn}")
                             Spacer(modifier = Modifier.height(8.dp))
 
                             Row(

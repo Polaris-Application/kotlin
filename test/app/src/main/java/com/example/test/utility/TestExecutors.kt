@@ -29,6 +29,10 @@ import android.telephony.SubscriptionManager
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.MediaType.Companion.toMediaType
 
 object TestExecutors {
 
@@ -124,7 +128,6 @@ object TestExecutors {
             speedTestSocket.closeSocket() // Stop the download test on cancellation
         }
     }
-
 
     suspend fun runHttpUploadTest(): Double = withContext(Dispatchers.IO) {
         val uploadUrl = URL("http://speedtest.rd.ks.cox.net:8080/speedtest/upload.php")
@@ -280,6 +283,7 @@ object TestExecutors {
                 if (sentTime1 != null && deliveryTime1 != null && !isResumed) {
                     isResumed = true
                     continuation.resume(SmsTestResult(sentTime1!!, deliveryTime1!!))
+
                 }
             }
         }
