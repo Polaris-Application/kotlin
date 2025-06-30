@@ -147,7 +147,6 @@ fun DownloadTestScreen(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Column(modifier = Modifier.weight(1f)) {
-                                        Text("${test.param}")
                                         Text("${test.repeatInterval}")
                                     }
                                     IconButton(onClick = {

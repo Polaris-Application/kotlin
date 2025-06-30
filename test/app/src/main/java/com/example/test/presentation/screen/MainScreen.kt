@@ -69,10 +69,10 @@ fun MainScreen(
                                 menuExpanded = false
                                 onNavigateTo("web_screen")
                             }
-                            menuItem("تغییر رمز عبور", "🔑") {
-                                menuExpanded = false
-                                onNavigateTo("change_password")
-                            }
+//                            menuItem("تغییر رمز عبور", "🔑") {
+//                                menuExpanded = false
+//                                onNavigateTo("change_password")
+//                            }
 
                             menuItem("درباره ما", "👤") {
                                 menuExpanded = false

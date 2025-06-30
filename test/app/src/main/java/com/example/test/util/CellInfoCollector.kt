@@ -69,7 +69,7 @@ object CellInfoCollector {
         var band: Int? = null
         var arfcn: Int? = null
         var rxLev: Int? = null
-
+        var actualTech: String? = null
 
         val cellInfos = telephonyManager.allCellInfo
         val targetCell: CellInfo? =
@@ -86,6 +86,25 @@ object CellInfoCollector {
         if (targetCell == null) {
             Log.e("CellInfoCollector", "❌ No matching cell info found")
         } else {
+            actualTech = when (targetCell) {
+                is CellInfoLte -> "LTE (4G)"
+                is CellInfoWcdma -> {
+                    // معمولاً این می‌تونه UMTS، HSDPA، HSUPA یا HSPA باشه، ولی Android اینو تفکیک نمی‌ده
+                    "WCDMA (3G)"
+                }
+                is CellInfoGsm -> {
+                    // بین GPRS، EDGE، و GSM تفاوتی قائل نمی‌شه، پس فقط می‌گیم 2G
+                    "GSM (2G)"
+                }
+                is CellInfoCdma -> "CDMA (2G)"
+                else -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && targetCell.javaClass.simpleName == "CellInfoNr") {
+                        "NR (5G)"
+                    } else {
+                        "Unknown"
+                    }
+                }
+            }
             when (targetCell) {
                 is CellInfoLte -> {
                     val ss = targetCell.cellSignalStrength
@@ -183,7 +202,9 @@ object CellInfoCollector {
             rssi = rssi,
             rscp = rscp,
             ecNo = ecNo,
-            rxLev = rxLev
+            rxLev = rxLev,
+            actualTechnology = actualTech
+
         )
     }
     private fun emptyEntity(reason: String): CellInfoEntity {
@@ -204,7 +225,8 @@ object CellInfoCollector {
             rssi = null,
             rscp = null,
             ecNo = null,
-            rxLev = null
+            rxLev = null,
+            actualTechnology=null
         )
     }
 
