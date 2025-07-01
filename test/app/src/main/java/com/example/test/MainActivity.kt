@@ -16,6 +16,9 @@ import com.example.test.presentation.viewmodel.MainViewModel
 import com.example.test.navigation.AppNavGraph
 import com.example.test.presentation.viewmodel.LoginViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -30,7 +33,9 @@ class MainActivity : ComponentActivity() {
         startForegroundService(Intent(this, TestSchedulerService::class.java))
 
         setContent {
+            var isDarkTheme by rememberSaveable { mutableStateOf(false) }
 
+            TestTheme(darkTheme = isDarkTheme) {
                 val navController = rememberNavController()
                 AppNavGraph(
                     navController = navController,
@@ -38,10 +43,13 @@ class MainActivity : ComponentActivity() {
                     selectedSim = viewModel.selectedSim.value,
                     onSimSelected = { viewModel.selectSim(it) },
                     onClearSim = { viewModel.clearSim() },
-                    onExit = { finishAffinity() }
+                    onExit = { finishAffinity() },
+                    isDarkTheme = isDarkTheme,
+                    onToggleTheme = { isDarkTheme = !isDarkTheme }
                 )
-
+            }
         }
+
     }
 
     private fun handleBatteryOptimization() {

@@ -14,11 +14,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import com.example.test.data.remote.*
+import com.example.test.domain.usecase.DeleteLoginDataUseCase
 
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val saveLoginDataUseCase: SaveLoginDataUseCase,
+    private val deleteLoginDataUseCase: DeleteLoginDataUseCase,
     private val authApi: AuthApi
 ) : ViewModel() {
 
@@ -81,7 +83,9 @@ class LoginViewModel @Inject constructor(
 
     fun getPasswordValidationError(password: String): String? {
         if (password.isBlank()) return "رمز عبور نمی‌تونه خالی باشه"
-        if (password.length < 4) return "رمز عبور باید حداقل ۴ کاراکتر باشه"
+        if (password.length < 8) return "رمز عبور باید حداقل 8 کاراکتر باشه"
+        if (!password.any { it.isLetter() }) return "رمز عبور باید حداقل یک حرف داشته باشه"
+        if (!password.any { it.isDigit() }) return "رمز عبور باید حداقل یک عدد داشته باشه"
         return null
     }
 
@@ -147,7 +151,16 @@ class LoginViewModel @Inject constructor(
             }
         }
     }
+    fun logout(context: Context) {
+        context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+            .edit()
+            .clear()
+            .apply()
 
+        viewModelScope.launch {
+            deleteLoginDataUseCase() // ← حذف از Room
+        }
+    }
 
 
 

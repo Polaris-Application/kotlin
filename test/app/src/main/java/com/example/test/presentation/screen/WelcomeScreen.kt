@@ -21,40 +21,61 @@ fun WelcomeScreen(
 ) {
     viewModel.onPermissionsGranted = onPermissionsGranted
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background // ← کرم روشن در لایت، مشکی در دارک
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.logo),
-            contentDescription = "Logo",
+        Column(
             modifier = Modifier
-                .height(120.dp)
-                .padding(bottom = 16.dp)
-        )
+                .fillMaxSize()
+                .padding(24.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.logo),
+                contentDescription = "Logo",
+                modifier = Modifier
+                    .height(240.dp)
+                    .padding(bottom = 16.dp)
+            )
 
-        Text(
-            "\u202Bبه Polaris خوش اومدی 😊",
-            style = MaterialTheme.typography.headlineSmall,
-            textAlign = TextAlign.Center
-        )
+            Text(
+                text = "\u202Bبه Polaris خوش اومدی 😊",
+                style = MaterialTheme.typography.headlineSmall,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.primary // نارنجی سفارشی تو
+            )
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        Text(
-            "\u202B توی اپ ما میتونی اطلاعات سلول شبکه رو پایش کنی و چندین تست کاربردی شبکه رو انجام بدی\n:)همین الان شروع کن",
-            textAlign = TextAlign.Center
-        )
+            Text(
+                text = "\u202Bتوی اپ ما می‌تونی اطلاعات سلول شبکه رو پایش کنی و چندین تست کاربردی شبکه رو انجام بدی\n:) همین الان شروع کن",
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onBackground // متن خاکستری تیره یا روشن بر اساس تم
+            )
 
-        Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
-        Button(onClick = {
-            viewModel.requestNextMissingPermission(activity)
-        }) {
-            Text("📲 دادن همه‌ی دسترسی‌ها و شروع")
+            Button(
+                onClick = {
+                    viewModel.requestNextMissingPermission(activity)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = MaterialTheme.shapes.medium,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary, // نارنجی
+                    contentColor = MaterialTheme.colorScheme.onPrimary  // سفید یا مشکی
+                )
+            ) {
+                Text(
+                    text = "📲 دادن همه‌ی دسترسی‌ها و شروع",
+                    style = MaterialTheme.typography.labelLarge
+                )
+            }
         }
     }
 }

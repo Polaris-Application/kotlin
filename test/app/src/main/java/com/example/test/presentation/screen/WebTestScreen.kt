@@ -1,19 +1,14 @@
 package com.example.test.presentation.screen
 
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,12 +19,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.test.data.local.entity.*
+import com.example.test.data.local.entity.NetworkTest
+import com.example.test.data.local.entity.WebTestEntity
 import com.example.test.presentation.viewmodel.TestViewModel
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,10 +37,7 @@ fun WebTestScreen(
     val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
 
     var showAddPanel by remember { mutableStateOf(false) }
-    var selectedTestType by remember { mutableStateOf("web") }
     var repeatInterval by remember { mutableStateOf("هر 1 دقیقه") }
-
-    // فیلدهای مربوط به تست‌ها
     var webUrl by remember { mutableStateOf(TextFieldValue("https://example.com")) }
 
     val repeatOptions = listOf("هر 1 دقیقه", "هر 5 دقیقه", "هر 15 دقیقه", "هر 1 ساعت", "تکرار نشود")
@@ -64,15 +56,21 @@ fun WebTestScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "بازگشت",
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                 },
                 actions = {
                     IconButton(onClick = { showAddPanel = !showAddPanel }) {
-                        Icon(Icons.Filled.Add, contentDescription = "افزودن تست")
+                        Icon(Icons.Filled.Add, contentDescription = "افزودن تست", tint = MaterialTheme.colorScheme.onPrimary)
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
+                    actionIconContentColor = MaterialTheme.colorScheme.onPrimary
+                )
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
@@ -81,65 +79,103 @@ fun WebTestScreen(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surface)
                 .padding(16.dp)
         ) {
             if (showAddPanel) {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    // کاهش فاصله بین گزینه‌های زمان
-                    Text("تناوب اجرا", textAlign = TextAlign.End, modifier = Modifier.fillMaxWidth())
-                    repeatOptions.forEach { option ->
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.End,
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 0.1.dp) // کاهش padding
-                        ) {
-                            Text(option)
-                            Spacer(modifier = Modifier.width(2.dp))
-                            RadioButton(
-                                selected = repeatInterval == option,
-                                onClick = { repeatInterval = option }
-                            )
-                        }
-                    }
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    elevation = CardDefaults.cardElevation(6.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(
+                            "تناوب اجرا",
+                            textAlign = TextAlign.End,
+                            modifier = Modifier.fillMaxWidth(),
+                            style = MaterialTheme.typography.titleSmall
+                        )
 
-                    // نمایش فیلد‌ها برای هر تست
-                    when (selectedTestType) {
-                        "web" -> {
-                            OutlinedTextField(
-                                value = webUrl,
-                                onValueChange = { webUrl = it },
-                                label = { Text("Web URL", textAlign = TextAlign.End, modifier = Modifier.fillMaxWidth()) },
+                        repeatOptions.forEach { option ->
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.End,
                                 modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-                    }
-
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                        Button(onClick = {
-                            val isInputValid = webUrl.text.isNotBlank()
-                            if (!isInputValid) {
-                                coroutineScope.launch {
-                                    snackbarHostState.showSnackbar("پارامتر ورودی معتبر نیست")
-                                }
-                            } else {
-                                val param = webUrl.text
-                                viewModel.addTest(
-                                    NetworkTest(type = selectedTestType, param = param, repeatInterval = repeatInterval),
-                                    param
+                            ) {
+                                Text(option)
+                                Spacer(modifier = Modifier.width(4.dp))
+                                RadioButton(
+                                    selected = repeatInterval == option,
+                                    onClick = { repeatInterval = option },
+                                    colors = RadioButtonDefaults.colors(
+                                        selectedColor = MaterialTheme.colorScheme.primary
+                                    )
                                 )
-                                showAddPanel = false
                             }
-                        }) {
-                            Text("ذخیره تست")
+                        }
+
+                        OutlinedTextField(
+                            value = webUrl,
+                            onValueChange = { webUrl = it },
+                            label = {
+                                Text(
+                                    "آدرس وب",
+                                    textAlign = TextAlign.End,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                            Button(
+                                onClick = {
+                                    if (webUrl.text.isBlank()) {
+                                        coroutineScope.launch {
+                                            snackbarHostState.showSnackbar("آدرس وب معتبر نیست")
+                                        }
+                                    } else {
+                                        viewModel.addTest(
+                                            NetworkTest(
+                                                type = "web",
+                                                param = webUrl.text,
+                                                repeatInterval = repeatInterval
+                                            ),
+                                            webUrl.text
+                                        )
+                                        showAddPanel = false
+                                    }
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary
+                                )
+                            ) {
+                                Text("ذخیره تست")
+                            }
                         }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Divider(
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
+                thickness = 1.dp
+            )
 
-            HorizontalDivider(color = Color.Gray, thickness = 1.dp)
-            Text("تست‌های تعریف‌شده", style = MaterialTheme.typography.titleMedium, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.End)
+            Text(
+                "تست‌های تعریف‌شده",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                textAlign = TextAlign.End
+            )
 
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(allTests) { test ->
@@ -147,9 +183,16 @@ fun WebTestScreen(
                     val results by viewModel.getResultsForTest(test.id, test.type).collectAsState(initial = emptyList())
 
                     Card(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD)),
-                        elevation = CardDefaults.cardElevation(4.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 6.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (test.isPaused)
+                                MaterialTheme.colorScheme.errorContainer
+                            else
+                                MaterialTheme.colorScheme.surfaceVariant
+                        ),
+                        elevation = CardDefaults.cardElevation(2.dp)
                     ) {
                         Column {
                             Row(
@@ -157,51 +200,53 @@ fun WebTestScreen(
                                     .fillMaxWidth()
                                     .clickable { expanded = !expanded }
                                     .padding(16.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween // همین جا آیکون‌ها رو در یک خط قرار می‌دهیم
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-
-                                // در اینجا آیکون حذف و آیکون کشویی در یک Row قرار می‌گیرند
                                 Row(
-                                    horizontalArrangement = Arrangement.spacedBy(16.dp), // فاصله بین آیکون‌ها
+                                    horizontalArrangement = Arrangement.spacedBy(16.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Column(modifier = Modifier.weight(1f)) {
-                                        Text("${test.param}")
-                                        Text("${test.repeatInterval}")
+                                        Text(text = test.param.toString(), style = MaterialTheme.typography.bodyLarge)
+                                        Text(text = test.repeatInterval, style = MaterialTheme.typography.bodySmall)
                                     }
+
                                     IconButton(onClick = {
                                         if (test.isPaused) viewModel.resumeTest(test.id)
                                         else viewModel.pauseTest(test.id)
                                     }) {
                                         Icon(
-                                            imageVector = if (test.isPaused) {
-                                                Icons.Filled.PlayArrow
-                                            } else {
-                                                Icons.Filled.Close // <- استفاده از Stop بجای Pause
-                                            },
-                                            contentDescription = if (test.isPaused) "ادامه تست" else "توقف تست"
+                                            imageVector = if (test.isPaused) Icons.Filled.PlayArrow else Icons.Filled.Close,
+                                            contentDescription = if (test.isPaused) "ادامه تست" else "توقف تست",
+                                            tint = MaterialTheme.colorScheme.primary
                                         )
                                     }
+
                                     IconButton(onClick = { viewModel.removeTest(test) }) {
-                                        Icon(Icons.Filled.Delete, contentDescription = "حذف تست")
+                                        Icon(
+                                            Icons.Filled.Delete,
+                                            contentDescription = "حذف تست",
+                                            tint = MaterialTheme.colorScheme.error
+                                        )
                                     }
+
                                     Icon(
                                         imageVector = if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
-                                        contentDescription = "Toggle Expand"
+                                        contentDescription = "نمایش نتایج",
+                                        tint = MaterialTheme.colorScheme.outline
                                     )
                                 }
                             }
 
                             if (expanded) {
                                 Column(modifier = Modifier.padding(12.dp)) {
-                                    // نمایش نتایج برای هر تست خاص
-                                    when (test.type) {
-                                        "web" -> {
-                                            results.filterIsInstance<WebTestEntity>().forEach { result ->
-                                                val formattedTimestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date(result.timestamp))
-                                                Text("⏱ ${formattedTimestamp} \n📊 Web Response Time: ${result.webResponseTime} ms\n")
-                                            }
-                                        }
+                                    results.filterIsInstance<WebTestEntity>().reversed().forEach { result ->
+                                        val formattedTime = SimpleDateFormat(
+                                            "yyyy-MM-dd HH:mm:ss",
+                                            Locale.getDefault()
+                                        ).format(Date(result.timestamp))
+
+                                        Text("⏱ $formattedTime\n📊 Web Response Time: ${result.webResponseTime} ms\n")
                                     }
                                 }
                             }

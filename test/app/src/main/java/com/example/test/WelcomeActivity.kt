@@ -5,9 +5,14 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import com.example.test.presentation.screen.WelcomeScreen
 import com.example.test.presentation.viewmodel.WelcomeViewModel
 import com.example.test.presentation.viewmodel.LoginViewModel
+import com.example.test.ui.theme.TestTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -26,12 +31,15 @@ class WelcomeActivity : ComponentActivity() {
         }
 
         setContent {
+            var isDarkTheme by rememberSaveable { mutableStateOf(false) }
 
-            WelcomeScreen(
-                viewModel = viewModel,
-                activity = this
-            ) {
-                handleLoginRouting()
+            TestTheme(darkTheme = isDarkTheme) {
+                WelcomeScreen(
+                    viewModel = viewModel,
+                    activity = this
+                ) {
+                    handleLoginRouting()
+                }
             }
         }
     }

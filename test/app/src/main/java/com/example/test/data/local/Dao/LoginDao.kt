@@ -14,4 +14,7 @@ interface LoginDao {
 
     @Query("SELECT * FROM login_data WHERE phoneNumber = :phone LIMIT 1")
     suspend fun getLoginData(phone: String): LoginEntity?
+
+    @Query("DELETE FROM login_data")
+    suspend fun deleteAllLoginData()
 }

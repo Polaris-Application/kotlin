@@ -1,24 +1,18 @@
 package com.example.test.presentation.screen
 
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -28,9 +22,7 @@ import com.example.test.data.local.entity.*
 import com.example.test.presentation.viewmodel.TestViewModel
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,7 +45,7 @@ fun DownloadTestScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text("Download تست های ", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+                    Text("Download تست‌های", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
                 },
                 navigationIcon = {
                     IconButton(onClick = {
@@ -62,15 +54,21 @@ fun DownloadTestScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "بازگشت",
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                 },
                 actions = {
                     IconButton(onClick = { showAddPanel = !showAddPanel }) {
-                        Icon(Icons.Filled.Add, contentDescription = "افزودن تست")
+                        Icon(Icons.Filled.Add, contentDescription = "افزودن تست", tint = MaterialTheme.colorScheme.onPrimary)
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
+                    actionIconContentColor = MaterialTheme.colorScheme.onPrimary
+                )
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
@@ -79,48 +77,90 @@ fun DownloadTestScreen(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surface)
                 .padding(16.dp)
         ) {
             if (showAddPanel) {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    // کاهش فاصله بین گزینه‌های زمان
-                    Text("تناوب اجرا", textAlign = TextAlign.End, modifier = Modifier.fillMaxWidth())
-                    repeatOptions.forEach { option ->
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.End,
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 0.1.dp) // کاهش padding
-                        ) {
-                            Text(option)
-                            Spacer(modifier = Modifier.width(2.dp))
-                            RadioButton(
-                                selected = repeatInterval == option,
-                                onClick = { repeatInterval = option }
-                            )
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    elevation = CardDefaults.cardElevation(6.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(
+                            "تناوب اجرا",
+                            textAlign = TextAlign.End,
+                            modifier = Modifier.fillMaxWidth(),
+                            style = MaterialTheme.typography.titleSmall
+                        )
+
+                        repeatOptions.forEach { option ->
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.End,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(option)
+                                Spacer(modifier = Modifier.width(4.dp))
+                                RadioButton(
+                                    selected = repeatInterval == option,
+                                    onClick = { repeatInterval = option },
+                                    colors = RadioButtonDefaults.colors(
+                                        selectedColor = MaterialTheme.colorScheme.primary
+                                    )
+                                )
+                            }
                         }
-                    }
 
-                    // نمایش فیلد‌ها برای تست دانلود
-                    Text("برای این تست نیازی به پارامتر ورودی نیست", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+                        Text(
+                            "برای این تست نیازی به پارامتر ورودی نیست",
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
 
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                        Button(onClick = {
-                            viewModel.addTest(
-                                NetworkTest(type = selectedTestType, param = "", repeatInterval = repeatInterval),
-                                ""
-                            )
-                            showAddPanel = false
-                        }) {
-                            Text("ذخیره تست")
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            Button(
+                                onClick = {
+                                    viewModel.addTest(
+                                        NetworkTest(type = selectedTestType, param = "", repeatInterval = repeatInterval),
+                                        ""
+                                    )
+                                    showAddPanel = false
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary
+                                )
+                            ) {
+                                Text("ذخیره تست")
+                            }
                         }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Divider(
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
+                thickness = 1.dp
+            )
 
-            HorizontalDivider(color = Color.Gray, thickness = 1.dp)
-            Text("تست‌های تعریف‌شده", style = MaterialTheme.typography.titleMedium, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.End)
+            Text(
+                "تست‌های تعریف‌شده",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                textAlign = TextAlign.End
+            )
 
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(allTests) { test ->
@@ -128,9 +168,16 @@ fun DownloadTestScreen(
                     val results by viewModel.getResultsForTest(test.id, test.type).collectAsState(initial = emptyList())
 
                     Card(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD)),
-                        elevation = CardDefaults.cardElevation(4.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 6.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (test.isPaused)
+                                MaterialTheme.colorScheme.errorContainer
+                            else
+                                MaterialTheme.colorScheme.surfaceVariant
+                        ),
+                        elevation = CardDefaults.cardElevation(2.dp)
                     ) {
                         Column {
                             Row(
@@ -138,49 +185,52 @@ fun DownloadTestScreen(
                                     .fillMaxWidth()
                                     .clickable { expanded = !expanded }
                                     .padding(16.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween // همین جا آیکون‌ها رو در یک خط قرار می‌دهیم
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-
-                                // در اینجا آیکون حذف و آیکون کشویی در یک Row قرار می‌گیرند
                                 Row(
-                                    horizontalArrangement = Arrangement.spacedBy(16.dp), // فاصله بین آیکون‌ها
+                                    horizontalArrangement = Arrangement.spacedBy(16.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Column(modifier = Modifier.weight(1f)) {
-                                        Text("${test.repeatInterval}")
+                                        Text(text = test.repeatInterval, style = MaterialTheme.typography.bodyLarge)
                                     }
                                     IconButton(onClick = {
                                         if (test.isPaused) viewModel.resumeTest(test.id)
                                         else viewModel.pauseTest(test.id)
                                     }) {
                                         Icon(
-                                            imageVector = if (test.isPaused) {
-                                                Icons.Filled.PlayArrow
-                                            } else {
-                                                Icons.Filled.Close // <- استفاده از Stop بجای Pause
-                                            },
-                                            contentDescription = if (test.isPaused) "ادامه تست" else "توقف تست"
+                                            imageVector = if (test.isPaused) Icons.Filled.PlayArrow else Icons.Filled.Close,
+                                            contentDescription = if (test.isPaused) "ادامه تست" else "توقف تست",
+                                            tint = MaterialTheme.colorScheme.primary
                                         )
                                     }
                                     IconButton(onClick = { viewModel.removeTest(test) }) {
-                                        Icon(Icons.Filled.Delete, contentDescription = "حذف تست")
+                                        Icon(
+                                            Icons.Filled.Delete,
+                                            contentDescription = "حذف تست",
+                                            tint = MaterialTheme.colorScheme.error
+                                        )
                                     }
                                     Icon(
                                         imageVector = if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
-                                        contentDescription = "Toggle Expand"
+                                        contentDescription = "نمایش نتایج",
+                                        tint = MaterialTheme.colorScheme.outline
                                     )
                                 }
                             }
 
                             if (expanded) {
                                 Column(modifier = Modifier.padding(12.dp)) {
-                                    // نمایش نتایج برای تست دانلود
-                                    when (test.type) {
-                                        "download" -> {
-                                            results.filterIsInstance<HttpDownloadTestEntity>().forEach { result ->
-                                                val formattedTimestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date(result.timestamp))
-                                                Text("⏱ ${formattedTimestamp} \n📊 Download Rate: ${result.downloadRate} Mbps\n")
-                                            }
+                                    if (test.type == "download") {
+                                        results.filterIsInstance<HttpDownloadTestEntity>().reversed().forEach { result ->
+                                            val formattedTimestamp = SimpleDateFormat(
+                                                "yyyy-MM-dd HH:mm:ss",
+                                                Locale.getDefault()
+                                            ).format(Date(result.timestamp))
+                                            Text(
+                                                "⏱ $formattedTimestamp\n📊 Download Rate: ${result.downloadRate} Mbps\n",
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
                                         }
                                     }
                                 }

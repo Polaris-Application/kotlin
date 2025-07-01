@@ -16,4 +16,7 @@ class LoginRepositoryImpl @Inject constructor(
     override suspend fun getLoginData(phone: String): LoginEntity? {
         return localDataSource.getLogin(phone)
     }
+    override suspend fun deleteAllLoginData() {
+        localDataSource.deleteAllLoginData()
+    }
 }

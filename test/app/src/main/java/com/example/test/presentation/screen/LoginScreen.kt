@@ -1,7 +1,7 @@
 package com.example.test.presentation.screen
 
-import android.content.Intent
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -15,9 +15,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.test.presentation.viewmodel.LoginViewModel
-import com.example.test.MainActivity
 
 @Composable
 fun LoginScreen(
@@ -33,6 +33,7 @@ fun LoginScreen(
     var passwordError by remember { mutableStateOf<String?>(null) }
 
     val loginState = viewModel.loginState
+
     LaunchedEffect(loginState) {
         loginState?.let { result ->
             result.onSuccess {
@@ -47,12 +48,14 @@ fun LoginScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
             .padding(24.dp),
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "برای ورود لطفاً شماره موبایل و رمز عبوری که با آن ها در سایت ثبت‌نام کردی را وارد کن",
-            textAlign = androidx.compose.ui.text.style.TextAlign.Right,
+            text = "برای ورود لطفاً شماره موبایل و رمز عبوری که با آن‌ها در سایت ثبت‌نام کرده‌اید را وارد کنید",
+            textAlign = TextAlign.Right,
+            color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -69,7 +72,9 @@ fun LoginScreen(
             isError = phoneError != null,
             modifier = Modifier.fillMaxWidth()
         )
-        phoneError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+        phoneError?.let {
+            Text(it, color = MaterialTheme.colorScheme.error)
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -93,7 +98,9 @@ fun LoginScreen(
             isError = passwordError != null,
             modifier = Modifier.fillMaxWidth()
         )
-        passwordError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+        passwordError?.let {
+            Text(it, color = MaterialTheme.colorScheme.error)
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -106,6 +113,10 @@ fun LoginScreen(
                     viewModel.loginUser(context, phoneNumber, password)
                 }
             },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            ),
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("ورود ▶️")
@@ -113,8 +124,11 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        TextButton(onClick = onNavigateToSignUp, modifier = Modifier.align(Alignment.End)) {
-            Text("اکانت نداری؟ ثبت‌نام کن")
+        TextButton(
+            onClick = onNavigateToSignUp,
+            modifier = Modifier.align(Alignment.End)
+        ) {
+            Text("اکانت نداری؟ ثبت‌نام کن", color = MaterialTheme.colorScheme.primary)
         }
     }
 }

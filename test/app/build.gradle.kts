@@ -83,6 +83,7 @@ dependencies {
     implementation(libs.gson)
     implementation(libs.okhttp)
     implementation(libs.logging.interceptor)
+    implementation(libs.compose.runtime.saveable)
 
 
 }

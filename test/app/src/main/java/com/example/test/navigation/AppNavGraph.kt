@@ -17,7 +17,9 @@ fun AppNavGraph(
     selectedSim: String,
     onSimSelected: (String) -> Unit,
     onClearSim: () -> Unit,
-    onExit: () -> Unit
+    onExit: () -> Unit,
+    isDarkTheme: Boolean,
+    onToggleTheme: () -> Unit
 ) {
     val context = LocalContext.current
     val isLoggedIn = viewModel.isPreviouslyLoggedIn(context)
@@ -50,6 +52,7 @@ fun AppNavGraph(
 
         composable("main") {
             MainScreen(
+                loginviewModel = viewModel,
                 selectedSim = selectedSim,
                 onSimSelected = onSimSelected,
                 onClearSim = onClearSim,
@@ -67,7 +70,9 @@ fun AppNavGraph(
                         popUpTo("main") { inclusive = true }
                     }
                     (context as? Activity)?.finish()
-                }
+                },
+                    isDarkTheme = isDarkTheme, // ✅ اضافه کن
+                    onToggleTheme = onToggleTheme
             )
         }
 

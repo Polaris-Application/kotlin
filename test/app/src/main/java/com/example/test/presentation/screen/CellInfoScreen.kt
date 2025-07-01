@@ -7,7 +7,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -44,17 +43,17 @@ fun CellInfoScreen(
     val activity = (context as? Activity)
     val listState = rememberLazyListState()
 
-    // وقتی لیست عوض بشه، لیست به بالای لیست (اول) بره
     LaunchedEffect(cellInfos.value) {
         if (cellInfos.value.isNotEmpty()) {
             listState.animateScrollToItem(0)
         }
     }
+
     Scaffold(
-        containerColor = Color(0xFFF8F8F8),
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = { Text("📡 Cell Info List", style = MaterialTheme.typography.titleLarge) },
+                title = { Text("📡 مشاهده اطلاعات سلول", style = MaterialTheme.typography.titleLarge,textAlign = TextAlign.Center) },
                 navigationIcon = {
                     IconButton(onClick = {
                         if (navController != null) {
@@ -91,9 +90,9 @@ fun CellInfoScreen(
                         .weight(1f)
                         .height(48.dp),
                     shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
-                    Text("دریافت اطلاعات", color = Color.White)
+                    Text("دریافت اطلاعات", color = MaterialTheme.colorScheme.onPrimary)
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))
@@ -109,9 +108,9 @@ fun CellInfoScreen(
                         .weight(1f)
                         .height(48.dp),
                     shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF44336))
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("پاک‌سازی لیست", color = Color.White)
+                    Text("پاک‌سازی لیست", color = MaterialTheme.colorScheme.onError)
                 }
             }
 
@@ -119,18 +118,18 @@ fun CellInfoScreen(
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = 12.dp)
-            )  {
+            ) {
                 items(cellInfos.value, key = { it.timestamp }) { cell ->
                     val simColor = when (cell.plmnId?.takeLast(1)) {
-                        "1" -> Color(0xFFE3F2FD)
-                        "2" -> Color(0xFFFFEBEE)
-                        else -> Color(0xFFF5F5F5)
+                        "1" -> MaterialTheme.colorScheme.primaryContainer
+                        "2" -> MaterialTheme.colorScheme.secondaryContainer
+                        else -> MaterialTheme.colorScheme.surfaceVariant
                     }
 
                     val signalColor = when {
-                        cell.rsrp != null && cell.rsrp!! > -95 -> Color(0xFF4CAF50)
-                        cell.rsrp != null && cell.rsrp!! > -110 -> Color(0xFFFFC107)
-                        else -> Color(0xFFF44336)
+                        cell.rsrp != null && cell.rsrp!! > -95 -> MaterialTheme.colorScheme.primary
+                        cell.rsrp != null && cell.rsrp!! > -110 -> MaterialTheme.colorScheme.tertiary
+                        else -> MaterialTheme.colorScheme.error
                     }
 
                     Card(
@@ -143,14 +142,12 @@ fun CellInfoScreen(
                         elevation = CardDefaults.cardElevation(6.dp)
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            InfoRow("🕓", "زمان", value = formatTimestamp(cell.timestamp))
+                            InfoRow("🕓", "زمان", formatTimestamp(cell.timestamp))
                             InfoRow("📍", "مکان", "${cell.latitude}, ${cell.longitude}")
                             InfoRow("🌐", "نوع شبکه", cell.networkType.toString())
                             InfoRow("🗼", "نوع فناوری سلولی", cell.actualTechnology.toString())
                             InfoRow("📱", "PLMN", cell.plmnId.toString())
                             InfoRow("🔄", "LAC/RAC/TAC", "${cell.lac}/${cell.rac}/${cell.tac}")
-//                            InfoRow("📡", "Cell", cell.cellId.toString())
-//                            InfoRow("📶", "Band", "${cell.band}/${cell.arfcn}")
                             InfoRow("📡", "Cell ID", cell.cellId.toString())
                             InfoRow("📶", "Band", "${cell.band}")
                             InfoRow("📳", "ARFCN", "${cell.arfcn}")
@@ -160,14 +157,18 @@ fun CellInfoScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text(text = "", color = Color.Transparent) // یه خالی برای چپ
+                                Text(text = "", color = Color.Transparent)
                                 Row {
-                                    Text(text = "قدرت سیگنال‌ها ", fontWeight = FontWeight.Bold, textAlign = TextAlign.End)
+                                    Text(
+                                        text = "قدرت سیگنال‌ها ",
+                                        fontWeight = FontWeight.Bold,
+                                        textAlign = TextAlign.End,
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text(text = "📊", textAlign = TextAlign.End)
                                 }
                             }
-
 
                             InfoRowColored("RSRP", cell.rsrp?.toString() ?: "-", signalColor)
                             InfoRowColored("RSRQ", cell.rsrq?.toString() ?: "-", signalColor)
@@ -176,7 +177,11 @@ fun CellInfoScreen(
                             InfoRowColored("Ec/No", cell.ecNo?.toString() ?: "-", signalColor)
                             InfoRowColored("RxLev", cell.rxLev?.toString() ?: "-", signalColor)
 
-                            HorizontalDivider(modifier = Modifier.padding(top = 12.dp))
+                            Divider(
+                                thickness = 1.dp,
+                                color = MaterialTheme.colorScheme.outlineVariant,
+                                modifier = Modifier.padding(top = 12.dp)
+                            )
                         }
                     }
                 }
@@ -191,11 +196,25 @@ fun InfoRow(icon: String, label: String, value: String) {
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(text = value, textAlign = TextAlign.Start)
+        Text(
+            text = value,
+            textAlign = TextAlign.Start,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface
+        )
         Row {
-            Text(text = label, textAlign = TextAlign.End)
+            Text(
+                text = label,
+                textAlign = TextAlign.End,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
             Spacer(modifier = Modifier.width(4.dp))
-            Text(text = icon, textAlign = TextAlign.End)
+            Text(
+                text = icon,
+                textAlign = TextAlign.End,
+                style = MaterialTheme.typography.bodyLarge
+            )
         }
     }
 }
@@ -206,7 +225,17 @@ fun InfoRowColored(label: String, value: String, color: Color) {
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(text = value, color = color, textAlign = TextAlign.Start)
-        Text(text = label, textAlign = TextAlign.End)
+        Text(
+            text = value,
+            color = color,
+            textAlign = TextAlign.Start,
+            style = MaterialTheme.typography.bodyLarge
+        )
+        Text(
+            text = label,
+            textAlign = TextAlign.End,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface
+        )
     }
 }

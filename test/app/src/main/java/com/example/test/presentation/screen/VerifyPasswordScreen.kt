@@ -1,5 +1,5 @@
 package com.example.test.presentation.screen
-import android.content.Intent
+
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
@@ -12,14 +12,12 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.test.presentation.viewmodel.LoginViewModel
-import com.example.test.MainActivity
 
 @Composable
 fun VerifyPasswordScreen(
     viewModel: LoginViewModel,
     onVerified: () -> Unit
 ) {
-
     val context = LocalContext.current
     var password by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
@@ -33,7 +31,9 @@ fun VerifyPasswordScreen(
         Text(
             text = "برای ادامه، رمز عبوری که قبلاً وارد کرده بودی رو بزن:",
             textAlign = TextAlign.Right,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            color = MaterialTheme.colorScheme.onBackground,
+            style = MaterialTheme.typography.bodyLarge
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -48,7 +48,11 @@ fun VerifyPasswordScreen(
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Password),
             isError = error != null,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                focusedLabelColor = MaterialTheme.colorScheme.primary
+            )
         )
 
         error?.let {
@@ -58,27 +62,33 @@ fun VerifyPasswordScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        Button(onClick = {
-            val valid = viewModel.verifyPassword(context, password)
-            if (valid) {
-                viewModel.reLoginWithProvidedPassword(
-                    context = context,
-                    password = password,
-                    onSuccess = {
-                        Toast.makeText(context, "توکن‌ها به‌روز شدند!", Toast.LENGTH_SHORT).show()
-                        onVerified()
-                    },
-                    onError = { errorMessage ->
-                        error = "خطا در به‌روزرسانی توکن: $errorMessage"
-                        Toast.makeText(context, "خطا: $errorMessage", Toast.LENGTH_LONG).show()
-                    }
-                )
-            } else {
-                error = "رمز عبور اشتباه است"
-            }
-        }, modifier = Modifier.fillMaxWidth()) {
-            Text("ادامه ")
+        Button(
+            onClick = {
+                val valid = viewModel.verifyPassword(context, password)
+                if (valid) {
+                    viewModel.reLoginWithProvidedPassword(
+                        context = context,
+                        password = password,
+                        onSuccess = {
+                            Toast.makeText(context, "توکن‌ها به‌روز شدند!", Toast.LENGTH_SHORT).show()
+                            onVerified()
+                        },
+                        onError = { errorMessage ->
+                            error = "خطا در به‌روزرسانی توکن: $errorMessage"
+                            Toast.makeText(context, "خطا: $errorMessage", Toast.LENGTH_LONG).show()
+                        }
+                    )
+                } else {
+                    error = "رمز عبور اشتباه است"
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            )
+        ) {
+            Text("ادامه")
         }
-
     }
 }

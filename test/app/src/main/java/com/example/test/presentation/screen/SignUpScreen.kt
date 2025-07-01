@@ -1,8 +1,7 @@
 package com.example.test.presentation.screen
 
-
-import android.content.Intent
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -16,9 +15,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.test.presentation.viewmodel.LoginViewModel
-import com.example.test.MainActivity
 
 @Composable
 fun SignUpScreen(viewModel: LoginViewModel, onSignUpSuccess: () -> Unit) {
@@ -48,13 +47,16 @@ fun SignUpScreen(viewModel: LoginViewModel, onSignUpSuccess: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
             .padding(24.dp),
         verticalArrangement = Arrangement.Center
     ) {
         Text(
             text = "برای ساخت حساب جدید، شماره موبایل و رمز عبور دلخواهت رو وارد کن",
-            textAlign = androidx.compose.ui.text.style.TextAlign.Right,
-            modifier = Modifier.fillMaxWidth()
+            textAlign = TextAlign.Right,
+            modifier = Modifier.fillMaxWidth(),
+            color = MaterialTheme.colorScheme.onBackground,
+            style = MaterialTheme.typography.bodyLarge
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -68,9 +70,15 @@ fun SignUpScreen(viewModel: LoginViewModel, onSignUpSuccess: () -> Unit) {
             label = { Text("شماره موبایل") },
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Phone),
             isError = phoneError != null,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                focusedLabelColor = MaterialTheme.colorScheme.primary
+            )
         )
-        phoneError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+        phoneError?.let {
+            Text(it, color = MaterialTheme.colorScheme.error)
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -86,15 +94,22 @@ fun SignUpScreen(viewModel: LoginViewModel, onSignUpSuccess: () -> Unit) {
                 IconButton(onClick = { showPassword = !showPassword }) {
                     Icon(
                         imageVector = if (showPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                        contentDescription = null
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
             },
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Password),
             isError = passwordError != null,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                focusedLabelColor = MaterialTheme.colorScheme.primary
+            )
         )
-        passwordError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+        passwordError?.let {
+            Text(it, color = MaterialTheme.colorScheme.error)
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -107,9 +122,15 @@ fun SignUpScreen(viewModel: LoginViewModel, onSignUpSuccess: () -> Unit) {
             label = { Text("تکرار رمز عبور") },
             visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
             isError = confirmPasswordError != null,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                focusedLabelColor = MaterialTheme.colorScheme.primary
+            )
         )
-        confirmPasswordError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+        confirmPasswordError?.let {
+            Text(it, color = MaterialTheme.colorScheme.error)
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -132,7 +153,11 @@ fun SignUpScreen(viewModel: LoginViewModel, onSignUpSuccess: () -> Unit) {
                     )
                 }
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            )
         ) {
             Text("ثبت‌نام ✅")
         }
