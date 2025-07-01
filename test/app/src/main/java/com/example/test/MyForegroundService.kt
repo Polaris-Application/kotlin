@@ -59,7 +59,9 @@ class MyForegroundService : Service() {
                             rssi = entity.rssi?.toDouble(),
                             rscp = entity.rscp,
                             ec_no = entity.ecNo,
-                            rx_lev = entity.rxLev
+                            rx_lev = entity.rxLev,
+                            actualTechnology = entity.actualTechnology,
+                            frequencyMhz = entity.frequencyMhz
                         )
 
                         try {

@@ -112,7 +112,9 @@ class CellInfoViewModel @Inject constructor(
             rssi = rssi?.toDouble(),
             rscp = rscp,
             ec_no = ecNo,
-            rx_lev = rxLev
+            rx_lev = rxLev,
+            actualTechnology = actualTechnology,
+            frequencyMhz = frequencyMhz
         )
     }
 

@@ -70,6 +70,8 @@ object CellInfoCollector {
         var arfcn: Int? = null
         var rxLev: Int? = null
         var actualTech: String? = null
+        var frequencyMhz: Double? = null
+
 
         val cellInfos = telephonyManager.allCellInfo
         val targetCell: CellInfo? =
@@ -118,6 +120,8 @@ object CellInfoCollector {
                     cellId = identity.ci
                     band = identity.bandwidth
                     arfcn = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) identity.earfcn else null
+                    frequencyMhz = calculateFrequencyMhz(band, arfcn, actualTech)
+
                 }
                 is CellInfoWcdma -> {
                     val ss = targetCell.cellSignalStrength
@@ -142,6 +146,7 @@ object CellInfoCollector {
                             null
                         }
                     } else null
+                    frequencyMhz = calculateFrequencyMhz(band, arfcn, actualTech)
                 }
                 is CellInfoGsm -> {
                     val ss = targetCell.cellSignalStrength
@@ -161,6 +166,7 @@ object CellInfoCollector {
                     rxLev = if (rawDbm != CellSignalStrength.SIGNAL_STRENGTH_NONE_OR_UNKNOWN) {
                         ((rawDbm + 113) / 2).coerceIn(0, 63)
                     } else null
+                    frequencyMhz = calculateFrequencyMhz(band, arfcn, actualTech)
                 }
                 else -> {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && targetCell.javaClass.simpleName == "CellInfoNr") {
@@ -177,6 +183,7 @@ object CellInfoCollector {
                             val ss = signalMethod.invoke(targetCell)
                             val dbmMethod = ss?.javaClass?.getMethod("getDbm")
                             rsrp = dbmMethod?.invoke(ss) as? Int
+                            frequencyMhz = calculateFrequencyMhz(band, arfcn, actualTech)
                         } catch (e: Exception) {
                             Log.e("CellInfoCollector", "NR reflection failed: ${e.message}")
                         }
@@ -203,7 +210,8 @@ object CellInfoCollector {
             rscp = rscp,
             ecNo = ecNo,
             rxLev = rxLev,
-            actualTechnology = actualTech
+            actualTechnology = actualTech,
+            frequencyMhz = frequencyMhz
 
         )
     }
@@ -226,7 +234,9 @@ object CellInfoCollector {
             rscp = null,
             ecNo = null,
             rxLev = null,
-            actualTechnology=null
+            actualTechnology=null,
+            frequencyMhz = null
+
         )
     }
 
@@ -253,6 +263,75 @@ object CellInfoCollector {
         }
     }
 }
+data class BandFrequency(
+    val band: Int,
+    val tech: String, // LTE, NR, WCDMA, GSM
+    val uplinkRange: Pair<Double, Double>?,  // Optional
+    val downlinkRange: Pair<Double, Double>?,
+    val centerFrequencyMhz: Double? = null
+)
+
+private val bandFrequencies = listOf(
+    BandFrequency(1, "LTE", Pair(1920.0, 1980.0), Pair(2110.0, 2170.0), 2140.0),
+    BandFrequency(3, "LTE", Pair(1710.0, 1785.0), Pair(1805.0, 1880.0), 1842.5),
+    BandFrequency(7, "LTE", Pair(2500.0, 2570.0), Pair(2620.0, 2690.0), 2655.0),
+    BandFrequency(8, "LTE", Pair(880.0, 915.0), Pair(925.0, 960.0), 942.5),
+    BandFrequency(20, "LTE", Pair(832.0, 862.0), Pair(791.0, 821.0), 806.0),
+
+    BandFrequency(78, "NR", null, Pair(3300.0, 3800.0), 3550.0),
+    BandFrequency(41, "NR", null, Pair(2496.0, 2690.0), 2593.0),
+    BandFrequency(1, "NR", null, Pair(2110.0, 2170.0), 2140.0),
+)
+
+private fun calculateFrequencyMhz(
+    band: Int?,
+    arfcn: Int?,
+    tech: String?
+): Double? {
+    if (tech == null) return null
+
+    // اگه band موجود بود، از اون استفاده کن
+    val bandMatch = bandFrequencies.firstOrNull {
+        it.tech.equals(tech, ignoreCase = true) && it.band == band
+    }
+    if (bandMatch != null) return bandMatch.centerFrequencyMhz
+
+    // اگر arfcn نامعتبر یا null باشه، اصلاً ادامه نده
+    val nonNullArfcn = arfcn ?: return null
+
+    return when {
+        tech.contains("LTE", true) -> when (nonNullArfcn) {
+            in 0..599 -> 2110.0 + 0.1 * (nonNullArfcn - 0)      // Band 1
+            in 1200..1949 -> 1930.0 + 0.1 * (nonNullArfcn - 1200) // Band 2
+            in 2400..2649 -> 1805.0 + 0.1 * (nonNullArfcn - 2400) // Band 3
+            in 2750..3449 -> 2110.0 + 0.1 * (nonNullArfcn - 2750) // Band 7
+            in 6150..6449 -> 925.0 + 0.1 * (nonNullArfcn - 6150)  // Band 20
+            else -> null
+        }
+
+        tech.contains("NR", true) -> when (nonNullArfcn) {
+            in 620000..653333 -> 3300.0 + 0.015 * (nonNullArfcn - 620000) // Band n78
+            in 499200..537999 -> 2496.0 + 0.015 * (nonNullArfcn - 499200) // Band n41
+            else -> null
+        }
+
+        tech.contains("WCDMA", true) -> when (nonNullArfcn) {
+            in 10562..10838 -> 2112.4 + 0.2 * (nonNullArfcn - 10562) // Band 1
+            in 9662..9938 -> 1852.4 + 0.2 * (nonNullArfcn - 9662)   // Band 2
+            else -> null
+        }
+
+        tech.contains("GSM", true) -> when (nonNullArfcn) {
+            in 0..124 -> 935.0 + 0.2 * nonNullArfcn  // GSM 900
+            in 512..885 -> 1805.0 + 0.2 * (nonNullArfcn - 512) // DCS 1800
+            else -> null
+        }
+
+        else -> null
+    }
+}
+
+
 //package com.example.test.util
 //
 //import android.Manifest

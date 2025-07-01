@@ -23,5 +23,7 @@ data class CellInfoEntity(
     val rscp: Int?,
     val ecNo: Int?,
     val rxLev: Int?,
-    val actualTechnology: String?
+    val actualTechnology: String?,
+    val frequencyMhz: Double?
+
 )

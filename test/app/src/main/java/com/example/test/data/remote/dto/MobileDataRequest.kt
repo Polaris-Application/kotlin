@@ -18,5 +18,7 @@ data class MobileDataRequest(
     val rssi: Double?,
     val rscp: Int?,
     val ec_no: Int?,
-    val rx_lev: Int?
+    val rx_lev: Int?,
+    val actualTechnology: String?,
+    val frequencyMhz: Double?
 )

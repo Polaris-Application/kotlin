@@ -148,9 +148,10 @@ fun CellInfoScreen(
                             InfoRow("🗼", "نوع فناوری سلولی", cell.actualTechnology.toString())
                             InfoRow("📱", "PLMN", cell.plmnId.toString())
                             InfoRow("🔄", "LAC/RAC/TAC", "${cell.lac}/${cell.rac}/${cell.tac}")
-                            InfoRow("📡", "Cell ID", cell.cellId.toString())
+                            InfoRow("🆔", "آیدی سلول", cell.cellId.toString())
                             InfoRow("📶", "Band", "${cell.band}")
                             InfoRow("📳", "ARFCN", "${cell.arfcn}")
+                            InfoRow("📡", "فرکانس", "${cell.frequencyMhz?.let { String.format("%.2f MHz", it) } ?: "null"}")
                             Spacer(modifier = Modifier.height(8.dp))
 
                             Row(
