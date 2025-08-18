@@ -24,5 +24,6 @@ data class DNSTestEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val testId: Long,         // به NetworkTest اشاره می‌کند
     val timestamp: Long,      // زمان ثبت تست
-    val dnsTime: Long        // زمان پاسخ DNS
+    val dnsTime: Long,       // زمان پاسخ DNS
+    val isuploaded: Boolean = false
 )

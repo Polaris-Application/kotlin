@@ -7,4 +7,6 @@ interface DNSTestRepository {
     suspend fun insertDNSTest(dnsTest: DNSTestEntity)
     fun getAllDNSTests(): Flow<List<DNSTestEntity>>
     suspend fun clearAllDNSTests()
+    suspend fun getUnsentDnsTests(): List<DNSTestEntity>
+    suspend fun markDnsTestsAsUploaded(ids: List<Long>)
 }

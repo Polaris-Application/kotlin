@@ -19,4 +19,7 @@ class WebTestLocalDataSourceImpl @Inject constructor(
     override suspend fun clearAllWebTests() {
         dao.clearAllWebTests()
     }
+    override suspend fun getUnsentWebTests() = dao.getUnsentWebTests()
+    override suspend fun markWebTestsAsUploaded(ids: List<Long>) = dao.markWebTestsAsUploaded(ids)
+
 }

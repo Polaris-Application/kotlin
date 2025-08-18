@@ -22,3 +22,15 @@ class ClearAllHttpDownloadTestsUseCase @Inject constructor(
 ) {
     suspend operator fun invoke() = repository.clearAllHttpDownloadTests()
 }
+
+class GetUnsentDownloadTestsUseCase @Inject constructor(
+    private val repository: HttpDownloadTestRepository
+) {
+    suspend operator fun invoke(): List<HttpDownloadTestEntity> = repository.getUnsentDownloadTests()
+}
+
+class MarkDownloadTestsAsUploadedUseCase @Inject constructor(
+    private val repository: HttpDownloadTestRepository
+) {
+    suspend operator fun invoke(ids: List<Long>) = repository.markDownloadTestsAsUploaded(ids)
+}

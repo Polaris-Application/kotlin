@@ -17,4 +17,11 @@ interface CellInfoDao {
 
     @Query("DELETE FROM cell_info")
     suspend fun clearAll()
+
+    @Query("SELECT * FROM cell_info WHERE isuploaded = 0")
+    suspend fun getUnsentCellInfo(): List<CellInfoEntity>
+
+    @Query("UPDATE cell_info SET isuploaded = 1 WHERE id IN (:ids)")
+    suspend fun markAsUploaded(ids: List<Long>)
+
 }

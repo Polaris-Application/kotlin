@@ -21,5 +21,6 @@ data class WebTestEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val testId: Long,          // به NetworkTest اشاره می‌کند
     val timestamp: Long,      // زمان ثبت تست
-    val webResponseTime: Long // زمان پاسخ وب
+    val webResponseTime: Long, // زمان پاسخ وب
+    val isuploaded: Boolean = false
 )

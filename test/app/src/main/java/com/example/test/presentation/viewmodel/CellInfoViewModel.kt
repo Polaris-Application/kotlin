@@ -8,6 +8,7 @@ import com.example.test.data.local.entity.CellInfoEntity
 import com.example.test.data.remote.MobileDataApi
 import com.example.test.domain.usecase.CellInfoUseCases
 import com.example.test.util.CellInfoCollector
+import com.example.test.utility.UploadSettingsHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,15 +16,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.example.test.data.remote.dto.MobileDataRequest
-import java.util.Date
-import java.util.Locale
-import java.text.SimpleDateFormat
+import com.example.test.utility.sendUnsentCellDataNow
 
 @HiltViewModel
 class CellInfoViewModel @Inject constructor(
     private val useCases: CellInfoUseCases,
-    private val mobileDataApi: MobileDataApi
+    private val mobileDataApi: MobileDataApi,
+    private val uploadSettings: UploadSettingsHelper
 ) : ViewModel() {
 
     private val _cellInfoList = MutableStateFlow<List<CellInfoEntity>>(emptyList())
@@ -53,69 +52,18 @@ class CellInfoViewModel @Inject constructor(
         }
     }
 
-
     fun collectAndSaveCellInfo(context: Context) {
         viewModelScope.launch {
             Log.d("CELL_SERVICE", "✅ شروع collectAndSaveCellInfo در ${System.currentTimeMillis()}")
             try {
                 val entity = CellInfoCollector.collect(context)
                 useCases.insertCellInfo(entity)
-
-                // ⬇️ گرفتن توکن
-                val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-                val accessToken = prefs.getString("access_token", null)
-
-                if (accessToken != null) {
-                    val request = entity.toMobileDataRequest()
-
-                    try {
-                        val response = mobileDataApi.sendMobileData("Bearer $accessToken", request)
-                        if (response.isSuccessful) {
-                            Log.d("CELL_SERVICE", "✅ ارسال موفق به سرور از ویومدل")
-                        } else {
-                            Log.e("CELL_SERVICE", "❌ ارسال ناموفق: ${response.code()}")
-                        }
-                    } catch (e: Exception) {
-                        Log.e("CELL_SERVICE", "❌ خطا هنگام ارسال به سرور: ${e.message}", e)
-                    }
-                } else {
-                    Log.w("CELL_SERVICE", "🔐 توکن وجود ندارد")
-                }
-
+                Log.d("CELL_SERVICE", "✅ داده ذخیره شد (بدون ارسال مستقیم)")
             } catch (e: Exception) {
                 Log.e("CellInfoViewModel", "❌ Error: ${e.message}", e)
             }
         }
     }
 
-
-
-
-    private fun CellInfoEntity.toMobileDataRequest(): MobileDataRequest {
-        val formatted = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
-        val timestampStr = formatted.format(Date(timestamp))
-
-        return MobileDataRequest(
-            network_type = networkType ?: "Unknown",
-            timestamp = timestampStr,
-            latitude = latitude,
-            longitude = longitude,
-            plmn_id = plmnId?.toIntOrNull(),
-            lac = lac,
-            rac = rac,
-            tac = tac,
-            cell_id = cellId,
-            band = band?.toString(),
-            arfcn = arfcn,
-            rsrp = rsrp,
-            rsrq = rsrq,
-            rssi = rssi?.toDouble(),
-            rscp = rscp,
-            ec_no = ecNo,
-            rx_lev = rxLev,
-            actualTechnology = actualTechnology,
-            frequencyMhz = frequencyMhz
-        )
-    }
 
 }

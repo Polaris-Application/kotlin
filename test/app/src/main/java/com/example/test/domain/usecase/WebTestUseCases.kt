@@ -22,3 +22,15 @@ class ClearAllWebTestsUseCase @Inject constructor(
 ) {
     suspend operator fun invoke() = repository.clearAllWebTests()
 }
+class GetUnsentWebTestsUseCase @Inject constructor(
+    private val repo: WebTestRepository
+) {
+    suspend operator fun invoke(): List<WebTestEntity> = repo.getUnsentWebTests()
+}
+
+class MarkWebTestsAsUploadedUseCase @Inject constructor(
+    private val repo: WebTestRepository
+) {
+    suspend operator fun invoke(ids: List<Long>) = repo.markWebTestsAsUploaded(ids)
+}
+

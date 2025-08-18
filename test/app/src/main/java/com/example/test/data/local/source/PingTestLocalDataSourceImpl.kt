@@ -21,4 +21,7 @@ class PingTestLocalDataSourceImpl @Inject constructor(
     override suspend fun clearAllPingTests() {
         dao.clearAllPingTests()
     }
+    override suspend fun getUnsentPingTests() = dao.getUnsentPingTests()
+    override suspend fun markPingTestsAsUploaded(ids: List<Long>) = dao.markPingTestsAsUploaded(ids)
+
 }

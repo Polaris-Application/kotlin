@@ -20,4 +20,11 @@ interface PingTestDao {
 
     @Query("DELETE FROM ping_test")
     suspend fun clearAllPingTests()
+
+    @Query("SELECT * FROM ping_test WHERE isuploaded = 0")
+    suspend fun getUnsentPingTests(): List<PingTestEntity>
+
+    @Query("UPDATE ping_test SET isuploaded = 1 WHERE id IN (:ids)")
+    suspend fun markPingTestsAsUploaded(ids: List<Long>)
+
 }

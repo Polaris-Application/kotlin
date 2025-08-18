@@ -28,4 +28,11 @@ interface SMSTestDao {
 
     @Query("DELETE FROM sms_test")
     suspend fun clearAllSMSTests()
+
+    @Query("SELECT * FROM sms_test WHERE isuploaded = 0")
+    suspend fun getUnsentSmsTests(): List<SMSTestEntity>
+
+    @Query("UPDATE sms_test SET isuploaded = 1 WHERE id IN (:ids)")
+    suspend fun markSmsTestsAsUploaded(ids: List<Long>)
+
 }

@@ -22,3 +22,16 @@ class ClearAllPingTestsUseCase @Inject constructor(
 ) {
     suspend operator fun invoke() = repository.clearAllPingTests()
 }
+
+
+class GetUnsentPingTestsUseCase @Inject constructor(
+    private val repository: PingTestRepository
+) {
+    suspend operator fun invoke(): List<PingTestEntity> = repository.getUnsentPingTests()
+}
+
+class MarkPingTestsAsUploadedUseCase @Inject constructor(
+    private val repository: PingTestRepository
+) {
+    suspend operator fun invoke(ids: List<Long>) = repository.markPingTestsAsUploaded(ids)
+}

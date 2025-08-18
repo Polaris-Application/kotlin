@@ -17,73 +17,90 @@ import android.content.Context
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import com.example.test.domain.usecase.CellInfoUseCases
+import com.example.test.utility.UploadPolicy
+import com.example.test.utility.UploadSettingsHelper
+import com.example.test.utility.sendUnsentCellDataNow
+
 
 @AndroidEntryPoint
 class MyForegroundService : Service() {
 
     @Inject
     lateinit var insertCellInfoUseCase: InsertCellInfoUseCase
+    @Inject lateinit var useCases: CellInfoUseCases
+    @Inject
+    lateinit var uploadSettings: UploadSettingsHelper
+
+
     @Inject
     lateinit var mobileDataApi: MobileDataApi
 
     private lateinit var wakeLock: PowerManager.WakeLock
     private val handler = Handler(Looper.getMainLooper())
+    fun isInternetAvailable(context: Context): Boolean {
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val network = cm.activeNetwork ?: return false
+        val capabilities = cm.getNetworkCapabilities(network) ?: return false
+
+        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+                capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+    }
+
 
     private val runnable = object : Runnable {
         override fun run() {
             CoroutineScope(Dispatchers.IO).launch {
+                val uploadPolicy = uploadSettings.getCellUploadPolicy()
+                val uploadInterval = uploadSettings.getCellInterval()
+                val lastUploadTime = uploadSettings.getLastCellUploadTime()
+                val currentTime = System.currentTimeMillis()
+
                 try {
                     val entity = CellInfoCollector.collect(applicationContext)
                     insertCellInfoUseCase(entity)
-                    val sharedPrefs = applicationContext.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-                    val accessToken = sharedPrefs.getString("access_token", null)
+                    Log.d("CELL_SERVICE", "✅ داده ذخیره شد")
 
-                    if (accessToken != null) {
-                        val formatted = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
-                        val timestampStr = formatted.format(Date(entity.timestamp))
+                    when (uploadPolicy) {
+                        UploadPolicy.MANUAL -> {
+                            Log.d("CELL_SERVICE", "📥 حالت دستی: فقط ذخیره شد")
+                        }
 
-                        val request = MobileDataRequest(
-                            network_type = entity.networkType ?: "Unknown",
-                            timestamp = timestampStr,
-                            latitude = entity.latitude,
-                            longitude = entity.longitude,
-                            plmn_id = entity.plmnId?.toIntOrNull(),
-                            lac = entity.lac,
-                            rac = entity.rac,
-                            tac = entity.tac,
-                            cell_id = entity.cellId,
-                            band = entity.band?.toString(),
-                            arfcn = entity.arfcn,
-                            rsrp = entity.rsrp,
-                            rsrq = entity.rsrq,
-                            rssi = entity.rssi?.toDouble(),
-                            rscp = entity.rscp,
-                            ec_no = entity.ecNo,
-                            rx_lev = entity.rxLev,
-                            actualTechnology = entity.actualTechnology,
-                            frequencyMhz = entity.frequencyMhz
-                        )
-
-                        try {
-                            val response = mobileDataApi.sendMobileData("Bearer $accessToken", request)
-                            if (response.isSuccessful) {
-                                Log.d("CELL_SERVICE", "✅ Data sent to server successfully.")
-                            } else {
-                                Log.e("CELL_SERVICE", "❌ Failed to send data: ${response.code()}")
+                        UploadPolicy.INTERVAL -> {
+                            if (currentTime - lastUploadTime >= uploadInterval * 60 * 1000) {
+                                sendUnsentCellDataNow(
+                                    context = applicationContext,
+                                    getUnsentUseCase = useCases.getUnsentCellInfo,
+                                    markUploadedUseCase = useCases.markCellInfoAsUploaded,
+                                    mobileDataApi = mobileDataApi,
+                                    uploadSettings = uploadSettings
+                                )
                             }
-                        } catch (e: Exception) {
-                            Log.e("CELL_SERVICE", "❌ Exception while sending data: ${e.message}", e)
+                        }
+
+                        UploadPolicy.WHEN_AVAILABLE -> {
+                            if (isInternetAvailable(applicationContext)) {
+                                sendUnsentCellDataNow(
+                                    context = applicationContext,
+                                    getUnsentUseCase = useCases.getUnsentCellInfo,
+                                    markUploadedUseCase = useCases.markCellInfoAsUploaded,
+                                    mobileDataApi = mobileDataApi,
+                                    uploadSettings = uploadSettings
+                                )
+                            }
                         }
                     }
-
-                    Log.d("CELL_SERVICE", "✅ Data collected and saved.")
                 } catch (e: Exception) {
-                    Log.e("CELL_SERVICE", "❌ Error collecting/saving data: ${e.message}", e)
+                    Log.e("CELL_SERVICE", "❌ خطا در جمع‌آوری/ارسال داده: ${e.message}")
                 }
             }
-            handler.postDelayed(this, 30_000)
+
+            handler.postDelayed(this, 60_000) // هر یک دقیقه
         }
     }
+
 
     override fun onCreate() {
         super.onCreate()
@@ -159,4 +176,7 @@ class MyForegroundService : Service() {
             manager.createNotificationChannel(channel)
         }
     }
+
+
+
 }

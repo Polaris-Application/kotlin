@@ -23,4 +23,7 @@ class SMSTestLocalDataSourceImpl @Inject constructor(
     override suspend fun getTestById(testResultId: Long): SMSTestEntity? {
         return dao.getTestById(testResultId)
     }
+    override suspend fun getUnsentSmsTests() = dao.getUnsentSmsTests()
+    override suspend fun markSmsTestsAsUploaded(ids: List<Long>) = dao.markSmsTestsAsUploaded(ids)
+
 }

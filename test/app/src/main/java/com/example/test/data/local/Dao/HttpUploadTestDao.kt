@@ -20,4 +20,10 @@ interface HttpUploadTestDao {
 
     @Query("DELETE FROM http_upload_test")
     suspend fun clearAllHttpUploadTests()
+
+    @Query("SELECT * FROM http_upload_test WHERE isuploaded = 0")
+    suspend fun getUnsentUploadTests(): List<HttpUploadTestEntity>
+
+    @Query("UPDATE http_upload_test SET isuploaded = 1 WHERE id IN (:ids)")
+    suspend fun markUploadTestsAsUploaded(ids: List<Long>)
 }

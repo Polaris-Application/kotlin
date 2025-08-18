@@ -20,4 +20,10 @@ interface HttpDownloadTestDao {
 
     @Query("DELETE FROM http_download_test")
     suspend fun clearAllHttpDownloadTests()
+
+    @Query("SELECT * FROM http_download_test WHERE isuploaded = 0")
+    suspend fun getUnsentDownloadTests(): List<HttpDownloadTestEntity>
+
+    @Query("UPDATE http_download_test SET isuploaded = 1 WHERE id IN (:ids)")
+    suspend fun markDownloadTestsAsUploaded(ids: List<Long>)
 }

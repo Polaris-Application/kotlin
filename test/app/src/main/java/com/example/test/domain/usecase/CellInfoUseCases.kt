@@ -5,5 +5,8 @@ import javax.inject.Inject
 data class CellInfoUseCases @Inject constructor(
     val insertCellInfo: InsertCellInfoUseCase,
     val getAllCellInfo: GetAllCellInfoUseCase,
-    val clearAllCellInfo: ClearAllCellInfoUseCase
-)
+    val clearAllCellInfo: ClearAllCellInfoUseCase,
+    val getUnsentCellInfo: GetUnsentCellInfoUseCase,
+    val markCellInfoAsUploaded: MarkCellInfoAsUploadedUseCase,
+
+    )

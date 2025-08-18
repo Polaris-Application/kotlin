@@ -7,4 +7,6 @@ interface HttpDownloadTestRepository {
     suspend fun insertHttpDownloadTest(httpDownloadTest: HttpDownloadTestEntity)
     fun getAllHttpDownloadTests(): Flow<List<HttpDownloadTestEntity>>
     suspend fun clearAllHttpDownloadTests()
+    suspend fun getUnsentDownloadTests(): List<HttpDownloadTestEntity>
+    suspend fun markDownloadTestsAsUploaded(ids: List<Long>)
 }

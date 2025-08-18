@@ -8,6 +8,8 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
@@ -26,7 +28,10 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
 import com.example.test.data.remote.TestResultApi
+import com.example.test.domain.usecase.*
 import com.example.test.utility.TestUploader
+import com.example.test.utility.UploadPolicy
+import com.example.test.utility.UploadSettingsHelper
 
 
 @AndroidEntryPoint
@@ -38,6 +43,21 @@ class TestSchedulerService : Service() {
     @Inject lateinit var getResultsByTestIdUseCase: GetResultsByTestIdUseCase // تزریق GetResultsByTestIdUseCase
     @Inject lateinit var testResultApi: TestResultApi
     @Inject lateinit var uploader: TestUploader
+    @Inject lateinit var uploadSettings: UploadSettingsHelper
+    @Inject lateinit var getUnsentPingTests: GetUnsentPingTestsUseCase
+    @Inject lateinit var markPingTestsAsUploaded: MarkPingTestsAsUploadedUseCase
+    @Inject lateinit var getUnsentDnsTests: GetUnsentDnsTestsUseCase
+    @Inject lateinit var markDnsTestsAsUploaded: MarkDnsTestsAsUploadedUseCase
+    @Inject lateinit var getUnsentWebTests: GetUnsentWebTestsUseCase
+    @Inject lateinit var markWebTestsAsUploaded: MarkWebTestsAsUploadedUseCase
+    @Inject lateinit var getUnsentUploadTests: GetUnsentUploadTestsUseCase
+    @Inject lateinit var markUploadTestsAsUploaded: MarkUploadTestsAsUploadedUseCase
+    @Inject lateinit var getUnsentDownloadTests: GetUnsentDownloadTestsUseCase
+    @Inject lateinit var markDownloadTestsAsUploaded: MarkDownloadTestsAsUploadedUseCase
+    @Inject lateinit var getUnsentSmsTests: GetUnsentSmsTestsUseCase
+    @Inject lateinit var markSmsTestsAsUploaded: MarkSmsTestsAsUploadedUseCase
+
+
     private val serviceScope = CoroutineScope(Dispatchers.IO)
     private val jobs = mutableMapOf<Long, Job>()
     private var lastSmsSentTime: Long = 0L // زمان آخرین ارسال پیامک
@@ -49,6 +69,15 @@ class TestSchedulerService : Service() {
             }
         }
     }
+    fun isInternetAvailable(context: Context): Boolean {
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val network = cm.activeNetwork ?: return false
+        val capabilities = cm.getNetworkCapabilities(network) ?: return false
+
+        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+                capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+    }
+
 
     override fun onCreate() {
         Log.d("TestService", "Service started")
@@ -96,6 +125,66 @@ class TestSchedulerService : Service() {
                 }
             }
         }
+        startUploadScheduler()
+    }
+    private fun startUploadScheduler() {
+        serviceScope.launch {
+            while (isActive) {
+                val policy = uploadSettings.getTestUploadPolicy()
+                val interval = uploadSettings.getTestInterval()
+
+                when (policy) {
+                    UploadPolicy.MANUAL -> {
+                        // کاری نکن
+                    }
+
+                    UploadPolicy.WHEN_AVAILABLE -> {
+                        if (isInternetAvailable(this@TestSchedulerService)) {
+                            uploader.sendUnsentTestResultsNow(
+                                context = this@TestSchedulerService,
+                                uploader = uploader,
+                                getUnsentPingTests = getUnsentPingTests,
+                                markPingTestsAsUploaded = markPingTestsAsUploaded,
+                                getUnsentDnsTests = getUnsentDnsTests,
+                                markDnsTestsAsUploaded = markDnsTestsAsUploaded,
+                                getUnsentWebTests = getUnsentWebTests,
+                                markWebTestsAsUploaded = markWebTestsAsUploaded,
+                                getUnsentUploadTests = getUnsentUploadTests,
+                                markUploadTestsAsUploaded = markUploadTestsAsUploaded,
+                                getUnsentDownloadTests = getUnsentDownloadTests,
+                                markDownloadTestsAsUploaded = markDownloadTestsAsUploaded,
+                                getUnsentSmsTests = getUnsentSmsTests,
+                                markSmsTestsAsUploaded = markSmsTestsAsUploaded,
+                                uploadSettings = uploadSettings
+                            )
+                        }
+
+                        delay(1 * 60_000L) // هر 1 دقیقه دوباره چک کن
+                    }
+
+                    UploadPolicy.INTERVAL -> {
+                        uploader.sendUnsentTestResultsNow(
+                            context = this@TestSchedulerService,
+                            uploader = uploader,
+                            getUnsentPingTests = getUnsentPingTests,
+                            markPingTestsAsUploaded = markPingTestsAsUploaded,
+                            getUnsentDnsTests = getUnsentDnsTests,
+                            markDnsTestsAsUploaded = markDnsTestsAsUploaded,
+                            getUnsentWebTests = getUnsentWebTests,
+                            markWebTestsAsUploaded = markWebTestsAsUploaded,
+                            getUnsentUploadTests = getUnsentUploadTests,
+                            markUploadTestsAsUploaded = markUploadTestsAsUploaded,
+                            getUnsentDownloadTests = getUnsentDownloadTests,
+                            markDownloadTestsAsUploaded = markDownloadTestsAsUploaded,
+                            getUnsentSmsTests = getUnsentSmsTests,
+                            markSmsTestsAsUploaded = markSmsTestsAsUploaded,
+                            uploadSettings = uploadSettings
+                        )
+                        delay(interval * 60_000L)
+                    }
+                }
+            }
+        }
     }
 
     private fun restartAllScheduledTests() {
@@ -129,7 +218,7 @@ class TestSchedulerService : Service() {
                     deliveryTime = smsResult.deliveryTime
                 )
                 addTestResultUseCase(smsTestEntity)
-                uploader.uploadResult("sms", param, (smsResult.deliveryTime - smsResult.sentTime).toDouble())
+               // uploader.uploadResult("sms", param, (smsResult.deliveryTime - smsResult.sentTime).toDouble())
                 return@runTestOnce
 
             }
@@ -148,35 +237,35 @@ class TestSchedulerService : Service() {
                     addTestResultUseCase(
                         PingTestEntity(testId = testId, timestamp = timestamp, pingTime = value)
                     )
-                    uploader.uploadResult("ping", param, value.toDouble())
+                    //uploader.uploadResult("ping", param, value.toDouble())
                 }
                 "dns" -> {
                     val value = resultValue.toLong()
                     addTestResultUseCase(
                         DNSTestEntity(testId = testId, timestamp = timestamp, dnsTime = value)
                     )
-                    uploader.uploadResult("dns", param, value.toDouble())
+                    //uploader.uploadResult("dns", param, value.toDouble())
                 }
                 "web" -> {
                     val value = resultValue.toLong()
                     addTestResultUseCase(
                         WebTestEntity(testId = testId, timestamp = timestamp, webResponseTime = value)
                     )
-                    uploader.uploadResult("web", param, value.toDouble())
+                    //uploader.uploadResult("web", param, value.toDouble())
                 }
                 "upload" -> {
                     val value = resultValue.toDouble()
                     addTestResultUseCase(
                         HttpUploadTestEntity(testId = testId, timestamp = timestamp, uploadRate = value)
                     )
-                    uploader.uploadResult("upload", null, value)
+                    //uploader.uploadResult("upload", null, value)
                 }
                 "download" -> {
                     val value = resultValue.toDouble()
                     addTestResultUseCase(
                         HttpDownloadTestEntity(testId = testId, timestamp = timestamp, downloadRate = value)
                     )
-                    uploader.uploadResult("download", null, value)
+                    //uploader.uploadResult("download", null, value)
                 }
                 "sms" -> {
                     // نتیجه SMS در اینجا ذخیره نمی‌شود چون در runSmsTest ذخیره می‌شود

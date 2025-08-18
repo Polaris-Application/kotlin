@@ -6,10 +6,22 @@ import com.example.test.data.local.Dao.*
 import com.example.test.data.local.database.AppDatabase
 import com.example.test.data.local.source.CellInfoLocalDataSource
 import com.example.test.data.local.source.CellInfoLocalDataSourceImpl
+import com.example.test.data.local.source.DNSTestLocalDataSource
+import com.example.test.data.local.source.DNSTestLocalDataSourceImpl
+import com.example.test.data.local.source.HttpDownloadTestLocalDataSource
+import com.example.test.data.local.source.HttpDownloadTestLocalDataSourceImpl
+import com.example.test.data.local.source.HttpUploadTestLocalDataSource
+import com.example.test.data.local.source.HttpUploadTestLocalDataSourceImpl
 import com.example.test.data.local.source.LoginLocalDataSource
 import com.example.test.data.local.source.LoginLocalDataSourceImpl
 import com.example.test.data.local.source.NetworkTestDataSource
 import com.example.test.data.local.source.NetworkTestDataSourceImpl
+import com.example.test.data.local.source.PingTestLocalDataSource
+import com.example.test.data.local.source.PingTestLocalDataSourceImpl
+import com.example.test.data.local.source.SMSTestLocalDataSource
+import com.example.test.data.local.source.SMSTestLocalDataSourceImpl
+import com.example.test.data.local.source.WebTestLocalDataSource
+import com.example.test.data.local.source.WebTestLocalDataSourceImpl
 import com.example.test.data.repository.CellInfoRepositoryImpl
 import com.example.test.data.repository.NetworkTestRepositoryImpl
 import com.example.test.data.repository.*
@@ -50,12 +62,72 @@ abstract class AppModule {
         impl: NetworkTestRepositoryImpl
     ): NetworkTestRepository
 
+    @Binds
+    abstract fun bindSMSTestLocalDataSource(
+        impl: SMSTestLocalDataSourceImpl
+    ): SMSTestLocalDataSource
+
     // SMSTest Repository
     @Binds
     abstract fun bindSMSTestRepository(
         impl: SMSTestRepositoryImpl
     ): SMSTestRepository
 
+
+    // Download Test
+    @Binds
+    abstract fun bindHttpDownloadTestRepository(
+        impl: HttpDownloadTestRepositoryImpl
+    ): HttpDownloadTestRepository
+
+    @Binds
+    abstract fun bindHttpDownloadTestLocalDataSource(
+        impl: HttpDownloadTestLocalDataSourceImpl
+    ): HttpDownloadTestLocalDataSource
+
+    // Upload Test
+    @Binds
+    abstract fun bindHttpUploadTestRepository(
+        impl: HttpUploadTestRepositoryImpl
+    ): HttpUploadTestRepository
+
+    @Binds
+    abstract fun bindHttpUploadTestLocalDataSource(
+        impl: HttpUploadTestLocalDataSourceImpl
+    ): HttpUploadTestLocalDataSource
+
+    // DNS Test
+    @Binds
+    abstract fun bindDnsTestRepository(
+        impl: DNSTestRepositoryImpl
+    ): DNSTestRepository
+
+    @Binds
+    abstract fun bindDnsTestLocalDataSource(
+        impl: DNSTestLocalDataSourceImpl
+    ): DNSTestLocalDataSource
+
+    // Ping Test
+    @Binds
+    abstract fun bindPingTestRepository(
+        impl: PingTestRepositoryImpl
+    ): PingTestRepository
+
+    @Binds
+    abstract fun bindPingTestLocalDataSource(
+        impl: PingTestLocalDataSourceImpl
+    ): PingTestLocalDataSource
+
+    // Web Test
+    @Binds
+    abstract fun bindWebTestRepository(
+        impl: WebTestRepositoryImpl
+    ): WebTestRepository
+
+    @Binds
+    abstract fun bindWebTestLocalDataSource(
+        impl: WebTestLocalDataSourceImpl
+    ): WebTestLocalDataSource
     companion object {
 
         @Provides
@@ -93,12 +165,29 @@ abstract class AppModule {
             ClearAllCellInfoUseCase(repo)
 
         @Provides
+        fun provideGetUnsentCellInfoUseCase(repo: CellInfoRepository) =
+            GetUnsentCellInfoUseCase(repo)
+
+        @Provides
+        fun provideMarkCellInfoAsUploadedUseCase(repo: CellInfoRepository) =
+            MarkCellInfoAsUploadedUseCase(repo)
+
+
+        @Provides
         @Singleton
         fun provideCellInfoUseCases(
-            insert: InsertCellInfoUseCase,
-            getAll: GetAllCellInfoUseCase,
-            clear: ClearAllCellInfoUseCase
-        ): CellInfoUseCases = CellInfoUseCases(insert, getAll, clear)
+            insertCellInfo: InsertCellInfoUseCase,
+            getAllCellInfo: GetAllCellInfoUseCase,
+            clearAllCellInfo: ClearAllCellInfoUseCase,
+            getUnsentCellInfo: GetUnsentCellInfoUseCase,
+            markCellInfoAsUploaded: MarkCellInfoAsUploadedUseCase
+        ): CellInfoUseCases = CellInfoUseCases(
+            insertCellInfo = insertCellInfo,
+            getAllCellInfo = getAllCellInfo,
+            clearAllCellInfo = clearAllCellInfo,
+            getUnsentCellInfo = getUnsentCellInfo,
+            markCellInfoAsUploaded = markCellInfoAsUploaded
+        )
 
         // ====== Network Test UseCases ======
         @Provides fun provideAddTestUseCase(repo: NetworkTestRepository) =
@@ -117,6 +206,37 @@ abstract class AppModule {
             RemoveTestUseCase(repo)
         @Provides fun provideGetTestById(repo: NetworkTestRepository) =  // اصلاح تزریق اینجا
             GetTestById(repo)
+
+        @Provides fun provideGetUnsentDnsTestsUseCase(repo: DNSTestRepository) =
+            GetUnsentDnsTestsUseCase(repo)
+
+        @Provides fun provideMarkDnsTestsAsUploadedUseCase(repo: DNSTestRepository) =
+            MarkDnsTestsAsUploadedUseCase(repo)
+
+        // مشابه برای بقیه:
+        @Provides fun provideGetUnsentPingTestsUseCase(repo: PingTestRepository) =
+            GetUnsentPingTestsUseCase(repo)
+
+        @Provides fun provideMarkPingTestsAsUploadedUseCase(repo: PingTestRepository) =
+            MarkPingTestsAsUploadedUseCase(repo)
+
+        @Provides fun provideGetUnsentWebTestsUseCase(repo: WebTestRepository) =
+            GetUnsentWebTestsUseCase(repo)
+
+        @Provides fun provideMarkWebTestsAsUploadedUseCase(repo: WebTestRepository) =
+            MarkWebTestsAsUploadedUseCase(repo)
+
+        @Provides fun provideGetUnsentUploadTestsUseCase(repo: HttpUploadTestRepository) =
+            GetUnsentUploadTestsUseCase(repo)
+
+        @Provides fun provideMarkUploadTestsAsUploadedUseCase(repo: HttpUploadTestRepository) =
+            MarkUploadTestsAsUploadedUseCase(repo)
+
+        @Provides fun provideGetUnsentDownloadTestsUseCase(repo: HttpDownloadTestRepository) =
+            GetUnsentDownloadTestsUseCase(repo)
+
+        @Provides fun provideMarkDownloadTestsAsUploadedUseCase(repo: HttpDownloadTestRepository) =
+            MarkDownloadTestsAsUploadedUseCase(repo)
 
         @Provides
         @Singleton
@@ -176,6 +296,7 @@ abstract class AppModule {
         fun provideLoginRepository(
             source: LoginLocalDataSource
         ): LoginRepository = LoginRepositoryImpl(source)
+
 
     }
 }

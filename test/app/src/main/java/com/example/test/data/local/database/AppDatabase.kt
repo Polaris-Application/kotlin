@@ -30,7 +30,7 @@ import com.example.test.data.local.entity.*
         NetworkTest::class,
         LoginEntity::class
     ],
-    version = 12,
+    version = 13,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

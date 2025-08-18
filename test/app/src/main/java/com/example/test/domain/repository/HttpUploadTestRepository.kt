@@ -7,4 +7,6 @@ interface HttpUploadTestRepository {
     suspend fun insertHttpUploadTest(httpUploadTest: HttpUploadTestEntity)
     fun getAllHttpUploadTests(): Flow<List<HttpUploadTestEntity>>
     suspend fun clearAllHttpUploadTests()
+    suspend fun getUnsentUploadTests(): List<HttpUploadTestEntity>
+    suspend fun markUploadTestsAsUploaded(ids: List<Long>)
 }

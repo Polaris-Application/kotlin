@@ -21,4 +21,12 @@ class CellInfoRepositoryImpl @Inject constructor(
     override suspend fun clearAllCellInfo() {
         localDataSource.clearAllCellInfo()
     }
+    override suspend fun getUnsentCellInfo(): List<CellInfoEntity> {
+        return localDataSource.getUnsentCellInfo()
+    }
+
+    override suspend fun markAsUploaded(ids: List<Long>) {
+        localDataSource.markAsUploaded(ids)
+    }
+
 }

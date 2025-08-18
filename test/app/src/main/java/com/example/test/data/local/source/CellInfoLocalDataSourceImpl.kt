@@ -20,4 +20,12 @@ class CellInfoLocalDataSourceImpl @Inject constructor(
     override suspend fun clearAllCellInfo() {
         dao.clearAll()
     }
+    override suspend fun getUnsentCellInfo(): List<CellInfoEntity> {
+        return dao.getUnsentCellInfo()
+    }
+
+    override suspend fun markAsUploaded(ids: List<Long>) {
+        dao.markAsUploaded(ids)
+    }
+
 }

@@ -22,5 +22,6 @@ data class HttpUploadTestEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val testId: Long,          // به NetworkTest اشاره می‌کند
     val timestamp: Long,      // زمان ثبت تست
-    val uploadRate: Double    // نرخ آپلود
+    val uploadRate: Double,    // نرخ آپلود
+    val isuploaded: Boolean = false
 )

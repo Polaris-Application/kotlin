@@ -19,4 +19,7 @@ class DNSTestLocalDataSourceImpl @Inject constructor(
     override suspend fun clearAllDNSTests() {
         dao.clearAllDNSTests()
     }
+    override suspend fun getUnsentDnsTests() = dao.getUnsentDnsTests()
+    override suspend fun markDnsTestsAsUploaded(ids: List<Long>) = dao.markDnsTestsAsUploaded(ids)
+
 }

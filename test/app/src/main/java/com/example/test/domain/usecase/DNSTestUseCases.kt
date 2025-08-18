@@ -22,3 +22,16 @@ class ClearAllDNSTestsUseCase @Inject constructor(
 ) {
     suspend operator fun invoke() = repository.clearAllDNSTests()
 }
+
+class GetUnsentDnsTestsUseCase @Inject constructor(
+    private val repository: DNSTestRepository
+) {
+    suspend operator fun invoke(): List<DNSTestEntity> = repository.getUnsentDnsTests()
+}
+
+class MarkDnsTestsAsUploadedUseCase @Inject constructor(
+    private val repository: DNSTestRepository
+) {
+    suspend operator fun invoke(ids: List<Long>) = repository.markDnsTestsAsUploaded(ids)
+}
+

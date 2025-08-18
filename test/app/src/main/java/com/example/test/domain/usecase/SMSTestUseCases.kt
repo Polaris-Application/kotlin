@@ -27,3 +27,15 @@ class GetTestByIdUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(testResultId: Long): SMSTestEntity? = repository.getTestById(testResultId)
     }
+
+class GetUnsentSmsTestsUseCase @Inject constructor(
+    private val repository: SMSTestRepository
+) {
+    suspend operator fun invoke(): List<SMSTestEntity> = repository.getUnsentSmsTests()
+}
+
+class MarkSmsTestsAsUploadedUseCase @Inject constructor(
+    private val repository: SMSTestRepository
+) {
+    suspend operator fun invoke(ids: List<Long>) = repository.markSmsTestsAsUploaded(ids)
+}

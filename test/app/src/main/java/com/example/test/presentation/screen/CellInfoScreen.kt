@@ -24,6 +24,9 @@ import androidx.compose.ui.text.style.TextAlign
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.example.test.presentation.viewmodel.MainViewModel
+import com.example.test.utility.UploadPolicy
+
 
 fun formatTimestamp(timestamp: Long): String {
     val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
@@ -36,6 +39,7 @@ fun CellInfoScreen(
     navController: NavController? = null
 ) {
     val viewModel: CellInfoViewModel = hiltViewModel()
+    val mainViewModel: MainViewModel = hiltViewModel()
     val cellInfos = viewModel.cellInfoList.collectAsState(initial = emptyList())
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
@@ -113,6 +117,7 @@ fun CellInfoScreen(
                     Text("پاک‌سازی لیست", color = MaterialTheme.colorScheme.onError)
                 }
             }
+
 
             LazyColumn(
                 state = listState,

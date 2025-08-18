@@ -19,4 +19,8 @@ class HttpDownloadTestLocalDataSourceImpl @Inject constructor(
     override suspend fun clearAllHttpDownloadTests() {
         dao.clearAllHttpDownloadTests()
     }
+
+    override suspend fun getUnsentDownloadTests() = dao.getUnsentDownloadTests()
+    override suspend fun markDownloadTestsAsUploaded(ids: List<Long>) = dao.markDownloadTestsAsUploaded(ids)
+
 }

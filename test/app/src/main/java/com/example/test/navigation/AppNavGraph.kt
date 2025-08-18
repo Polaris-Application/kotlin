@@ -8,12 +8,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.test.presentation.screen.*
 import com.example.test.presentation.viewmodel.LoginViewModel
-import com.example.test.ui.screen.*
+import com.example.test.presentation.viewmodel.MainViewModel
+import com.example.test.presentation.screen.*
 
 @Composable
 fun AppNavGraph(
     navController: NavHostController,
     viewModel: LoginViewModel,
+    mainViewModel: MainViewModel,
     selectedSim: String,
     onSimSelected: (String) -> Unit,
     onClearSim: () -> Unit,
@@ -53,6 +55,7 @@ fun AppNavGraph(
         composable("main") {
             MainScreen(
                 loginviewModel = viewModel,
+                mainViewModel =mainViewModel,
                 selectedSim = selectedSim,
                 onSimSelected = onSimSelected,
                 onClearSim = onClearSim,

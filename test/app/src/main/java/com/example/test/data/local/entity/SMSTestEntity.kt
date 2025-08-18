@@ -23,5 +23,6 @@ data class SMSTestEntity(
     val timestamp: Long,      // زمان ثبت تست
     val SMSTime: Long?,        // زمان ارسال SMS
     val sentTime:Long?,
-    val deliveryTime:Long?
+    val deliveryTime:Long?,
+    val isuploaded: Boolean = false
 )

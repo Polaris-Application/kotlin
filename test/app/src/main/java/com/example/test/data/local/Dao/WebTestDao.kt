@@ -20,4 +20,10 @@ interface WebTestDao {
 
     @Query("DELETE FROM web_test")
     suspend fun clearAllWebTests()
+
+    @Query("SELECT * FROM web_test WHERE isuploaded = 0")
+    suspend fun getUnsentWebTests(): List<WebTestEntity>
+
+    @Query("UPDATE web_test SET isuploaded = 1 WHERE id IN (:ids)")
+    suspend fun markWebTestsAsUploaded(ids: List<Long>)
 }

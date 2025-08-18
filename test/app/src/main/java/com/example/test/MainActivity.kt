@@ -40,6 +40,7 @@ class MainActivity : ComponentActivity() {
                 AppNavGraph(
                     navController = navController,
                     viewModel = loginViewModel,
+                    mainViewModel = viewModel,
                     selectedSim = viewModel.selectedSim.value,
                     onSimSelected = { viewModel.selectSim(it) },
                     onClearSim = { viewModel.clearSim() },

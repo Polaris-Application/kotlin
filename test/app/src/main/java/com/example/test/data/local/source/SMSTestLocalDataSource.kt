@@ -9,4 +9,6 @@ interface SMSTestLocalDataSource {
     suspend fun clearAllSmsTests()
     // متد جدید برای دریافت رکورد بر اساس testResultId
     suspend fun getTestById(testResultId: Long): SMSTestEntity?
+    suspend fun getUnsentSmsTests(): List<SMSTestEntity>
+    suspend fun markSmsTestsAsUploaded(ids: List<Long>)
 }

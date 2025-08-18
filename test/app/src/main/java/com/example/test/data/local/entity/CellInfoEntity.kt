@@ -24,6 +24,7 @@ data class CellInfoEntity(
     val ecNo: Int?,
     val rxLev: Int?,
     val actualTechnology: String?,
-    val frequencyMhz: Double?
+    val frequencyMhz: Double?,
+    val isuploaded: Boolean = false
 
 )

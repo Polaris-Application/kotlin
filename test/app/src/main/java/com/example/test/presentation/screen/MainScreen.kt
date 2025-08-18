@@ -1,9 +1,11 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
 
-package com.example.test.ui.screen
+package com.example.test.presentation.screen
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
@@ -17,10 +19,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.test.presentation.viewmodel.LoginViewModel
 import kotlinx.coroutines.launch
+import com.example.test.utility.UploadPolicy
+import com.example.test.presentation.viewmodel.MainViewModel // دقت کن این باید MainViewModel باشه
+import com.example.test.utility.UploadSettingsHelper
 
 @Composable
 fun MainScreen(
     loginviewModel: LoginViewModel,
+    mainViewModel: MainViewModel,
     selectedSim: String,
     onSimSelected: (String) -> Unit,
     onClearSim: () -> Unit,
@@ -33,6 +39,16 @@ fun MainScreen(
     val coroutineScope = rememberCoroutineScope()
     var showMenuSheet by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val uploadHelper = remember { UploadSettingsHelper(context) }
+    val lastCellTime = remember { uploadHelper.getLastCellUploadTime() }
+    val lastTestTime = remember { uploadHelper.getLastTestUploadTime() }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+
+    fun formatTime(timestamp: Long): String {
+        return if (timestamp == 0L) "ارسالی تاکنون انجام نشده"
+        else java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault()).format(java.util.Date(timestamp))
+    }
 
 
     Scaffold(
@@ -82,12 +98,15 @@ fun MainScreen(
                     containerColor = MaterialTheme.colorScheme.primary
                 )
             )
-        }
-    ) { innerPadding ->
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+
+        ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp, vertical = 32.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -130,6 +149,92 @@ fun MainScreen(
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.primary
             )
+            UploadSettingsCard(
+                title = "ارسال اطلاعات سلول چه زمانی انجام شود؟",
+                policy = mainViewModel.cellUploadPolicy.value,
+                intervalMinutes = mainViewModel.cellUploadInterval.value,
+                onPolicyChange = { mainViewModel.setCellUploadPolicy(it) },
+                onIntervalChange = { mainViewModel.setCellUploadInterval(it) }
+            )
+            val lastCellUploadTime = mainViewModel.uploadSettings.getLastCellUploadTime()
+            val formattedCellTime = if (lastCellUploadTime == 0L)
+                "⏱ هنوز ارسال نشده"
+            else
+                formatTime(lastCellUploadTime)
+
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "📡 آخرین ارسال اطلاعات سلول: $formattedCellTime",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.outline,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
+
+            if (mainViewModel.cellUploadPolicy.value == UploadPolicy.MANUAL) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = {
+                        mainViewModel.SendCellDataNow(context)
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar("📡 اطلاعات سلول ارسال شد")
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
+                ) {
+                    Text("📤 ارسال اطلاعات سلول", color = MaterialTheme.colorScheme.onTertiary)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            UploadSettingsCard(
+                title = "ارسال نتایج تست‌ها چه زمانی انجام شود؟",
+                policy = mainViewModel.testUploadPolicy.value,
+                intervalMinutes = mainViewModel.testUploadInterval.value,
+                onPolicyChange = { mainViewModel.setTestUploadPolicy(it) },
+                onIntervalChange = { mainViewModel.setTestUploadInterval(it) }
+            )
+            val lastTestUploadTime = mainViewModel.uploadSettings.getLastTestUploadTime()
+            val formattedTestTime = if (lastTestUploadTime == 0L)
+                "⏱ هنوز ارسال نشده"
+            else
+                formatTime(lastTestUploadTime)
+
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "🧪 آخرین ارسال نتایج تست: $formattedTestTime",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.outline,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
+
+            if (mainViewModel.testUploadPolicy.value == UploadPolicy.MANUAL) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = {
+                        mainViewModel.sendAllUnsentTestResults(context)
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar("📤 تست‌ها ارسال شدند")
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                ) {
+                    Text("📤 ارسال نتایج تست‌ها", color = MaterialTheme.colorScheme.onSecondary)
+                }
+            }
+
+
+
         }
     }
 
@@ -197,6 +302,107 @@ fun menuItem(text: String, emoji: String, onClick: () -> Unit) {
         ) {
             Text(text = "$text ", textAlign = TextAlign.Right)
             Text(text = emoji)
+        }
+    }
+}
+
+@Composable
+fun UploadSettingsCard(
+    title: String,
+    policy: UploadPolicy,
+    intervalMinutes: Int,
+    onPolicyChange: (UploadPolicy) -> Unit,
+    onIntervalChange: (Int) -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalAlignment = Alignment.End
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.Right,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Divider(color = MaterialTheme.colorScheme.outlineVariant)
+
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.End,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("فقط ارسال دستی", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    RadioButton(
+                        selected = policy == UploadPolicy.MANUAL,
+                        onClick = { onPolicyChange(UploadPolicy.MANUAL) }
+                    )
+                }
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.End,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("ارسال خودکار هر $intervalMinutes دقیقه", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    RadioButton(
+                        selected = policy == UploadPolicy.INTERVAL,
+                        onClick = { onPolicyChange(UploadPolicy.INTERVAL) }
+                    )
+                }
+
+                if (policy == UploadPolicy.INTERVAL) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(end = 40.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        horizontalAlignment = Alignment.End
+                    ) {
+                        Slider(
+                            value = intervalMinutes.toFloat(),
+                            onValueChange = { onIntervalChange(it.toInt()) },
+                            valueRange = 1f..240f,
+                            steps = 239,
+                            colors = SliderDefaults.colors(
+                                thumbColor = MaterialTheme.colorScheme.primary,
+                                activeTrackColor = MaterialTheme.colorScheme.primary
+                            )
+                        )
+                        Text(
+                            text = "بازه بین ۱ تا ۲۴۰ دقیقه",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.outline,
+                            textAlign = TextAlign.Right,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.End,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("ارسال هنگام دسترسی به اینترنت", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    RadioButton(
+                        selected = policy == UploadPolicy.WHEN_AVAILABLE,
+                        onClick = { onPolicyChange(UploadPolicy.WHEN_AVAILABLE) }
+                    )
+                }
+            }
         }
     }
 }
