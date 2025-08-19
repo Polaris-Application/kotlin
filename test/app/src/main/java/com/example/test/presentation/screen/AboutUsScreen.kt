@@ -108,7 +108,7 @@ fun AboutUsScreen(
 @Composable
 fun InfoCard(title: String, items: List<String>, isLink: Boolean = false) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.95f)),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {

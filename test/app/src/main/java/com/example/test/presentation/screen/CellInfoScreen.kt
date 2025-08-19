@@ -148,7 +148,8 @@ fun CellInfoScreen(
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             InfoRow("🕓", "زمان", formatTimestamp(cell.timestamp))
-                            InfoRow("📍", "مکان", "${cell.latitude}, ${cell.longitude}")
+                            InfoRow("📍", "طول جغرافیایی", "${cell.longitude}")
+                            InfoRow("📍", "عرض جغرافیایی", "${cell.latitude}")
                             InfoRow("🌐", "نوع شبکه", cell.networkType.toString())
                             InfoRow("🗼", "نوع فناوری سلولی", cell.actualTechnology.toString())
                             InfoRow("📱", "PLMN", cell.plmnId.toString())
