@@ -86,48 +86,86 @@ object TestExecutors {
         }
     }
 
+    suspend fun runHttpDownloadTest(): Double = withContext(Dispatchers.IO) {
+        val downloadUrl = URL("http://speedtest.tele2.net/10MB.zip") // فایل تست دانلود
 
-    suspend fun runHttpDownloadTest(): Double = suspendCancellableCoroutine { continuation ->
+        try {
+            val connection = downloadUrl.openConnection() as HttpURLConnection
+            connection.requestMethod = "GET"
+            connection.connectTimeout = 10000
+            connection.readTimeout = 10000
 
-        val downloadUrl = "https://ipv4.download.thinkbroadband.com/1MB.zip" // Download test URL
-        val speedTestSocket = SpeedTestSocket()
+            val startTime = System.currentTimeMillis()
+            var totalBytes: Long = 0
 
-        var finalTransferRate: Double = -1.0
-        var isResumed = false // Prevent multiple continuation.resume calls
-
-        val listener = object : ISpeedTestListener {
-            override fun onCompletion(report: SpeedTestReport) {
-                finalTransferRate =( report.transferRateBit.toDouble()) / (1_024 * 1_024)  // Convert to Mbps
-                Log.d("DownloadTest", "[COMPLETED] Rate in Mbps: $finalTransferRate")
-                checkAndResume()
-            }
-
-            override fun onError(speedTestError: SpeedTestError, errorMessage: String) {
-                Log.e("DownloadTest", "Error during download: $errorMessage")
-                finalTransferRate = -1.0 // Return negative value in case of error
-                checkAndResume()
-            }
-
-            override fun onProgress(percent: Float, report: SpeedTestReport) {
-                val transferRate = report.transferRateBit // Speed in bits per second
-                Log.d("DownloadTest", "[PROGRESS] Progress: $percent%, Rate in bit/s: $transferRate")
-            }
-
-            private fun checkAndResume() {
-                if (!isResumed) {
-                    isResumed = true
-                    continuation.resume(finalTransferRate)
+            connection.inputStream.use { input ->
+                val buffer = ByteArray(8 * 1024) // 8KB buffer
+                var bytesRead: Int
+                while (input.read(buffer).also { bytesRead = it } != -1) {
+                    totalBytes += bytesRead
                 }
             }
-        }
 
-        speedTestSocket.addSpeedTestListener(listener)
-        speedTestSocket.startDownload(downloadUrl)
+            val endTime = System.currentTimeMillis()
+            val durationSeconds = (endTime - startTime) / 1000.0
 
-        continuation.invokeOnCancellation {
-            speedTestSocket.closeSocket() // Stop the download test on cancellation
+            connection.disconnect()
+
+            if (durationSeconds > 0) {
+                val speedMbps = ((totalBytes * 8) / 1_000_000.0) / durationSeconds
+                Log.d("DownloadTest", "Downloaded ${totalBytes / 1024} KB in $durationSeconds s, speed: $speedMbps Mbps")
+                return@withContext speedMbps
+            } else {
+                return@withContext -1.0
+            }
+
+        } catch (e: Exception) {
+            Log.e("DownloadTest", "Download failed: ${e.message}")
+            return@withContext -1.0
         }
     }
+
+//    suspend fun runHttpDownloadTest(): Double = suspendCancellableCoroutine { continuation ->
+//
+//        val downloadUrl = "https://ipv4.download.thinkbroadband.com/1MB.zip" // Download test URL
+//        val speedTestSocket = SpeedTestSocket()
+//
+//        var finalTransferRate: Double = -1.0
+//        var isResumed = false // Prevent multiple continuation.resume calls
+//
+//        val listener = object : ISpeedTestListener {
+//            override fun onCompletion(report: SpeedTestReport) {
+//                finalTransferRate =( report.transferRateBit.toDouble()) / (1_024 * 1_024)  // Convert to Mbps
+//                Log.d("DownloadTest", "[COMPLETED] Rate in Mbps: $finalTransferRate")
+//                checkAndResume()
+//            }
+//
+//            override fun onError(speedTestError: SpeedTestError, errorMessage: String) {
+//                Log.e("DownloadTest", "Error during download: $errorMessage")
+//                finalTransferRate = -1.0 // Return negative value in case of error
+//                checkAndResume()
+//            }
+//
+//            override fun onProgress(percent: Float, report: SpeedTestReport) {
+//                val transferRate = report.transferRateBit // Speed in bits per second
+//                Log.d("DownloadTest", "[PROGRESS] Progress: $percent%, Rate in bit/s: $transferRate")
+//            }
+//
+//            private fun checkAndResume() {
+//                if (!isResumed) {
+//                    isResumed = true
+//                    continuation.resume(finalTransferRate)
+//                }
+//            }
+//        }
+//
+//        speedTestSocket.addSpeedTestListener(listener)
+//        speedTestSocket.startDownload(downloadUrl)
+//
+//        continuation.invokeOnCancellation {
+//            speedTestSocket.closeSocket() // Stop the download test on cancellation
+//        }
+//    }
 
     suspend fun runHttpUploadTest(): Double = withContext(Dispatchers.IO) {
         val uploadUrl = URL("http://speedtest.rd.ks.cox.net:8080/speedtest/upload.php")
