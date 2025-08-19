@@ -42,6 +42,15 @@ fun MainScreen(
     val uploadHelper = remember { UploadSettingsHelper(context) }
     val lastCellTime = remember { uploadHelper.getLastCellUploadTime() }
     val lastTestTime = remember { uploadHelper.getLastTestUploadTime() }
+    var lastCellUploadTime by remember { mutableStateOf(mainViewModel.uploadSettings.getLastCellUploadTime()) }
+    var lastTestUploadTime by remember { mutableStateOf(mainViewModel.uploadSettings.getLastTestUploadTime()) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            lastCellUploadTime = mainViewModel.uploadSettings.getLastCellUploadTime()
+            lastTestUploadTime = mainViewModel.uploadSettings.getLastTestUploadTime()
+            kotlinx.coroutines.delay(60_000) // هر 60 ثانیه
+        }
+    }
     val snackbarHostState = remember { SnackbarHostState() }
 
 
@@ -156,7 +165,6 @@ fun MainScreen(
                 onPolicyChange = { mainViewModel.setCellUploadPolicy(it) },
                 onIntervalChange = { mainViewModel.setCellUploadInterval(it) }
             )
-            val lastCellUploadTime = mainViewModel.uploadSettings.getLastCellUploadTime()
             val formattedCellTime = if (lastCellUploadTime == 0L)
                 "⏱ هنوز ارسال نشده"
             else
@@ -199,7 +207,7 @@ fun MainScreen(
                 onPolicyChange = { mainViewModel.setTestUploadPolicy(it) },
                 onIntervalChange = { mainViewModel.setTestUploadInterval(it) }
             )
-            val lastTestUploadTime = mainViewModel.uploadSettings.getLastTestUploadTime()
+
             val formattedTestTime = if (lastTestUploadTime == 0L)
                 "⏱ هنوز ارسال نشده"
             else
